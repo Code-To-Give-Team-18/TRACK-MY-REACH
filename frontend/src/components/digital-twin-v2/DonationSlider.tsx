@@ -11,7 +11,6 @@ interface DonationSliderProps {
 
 export function DonationSlider({ value, onChange }: DonationSliderProps) {
   const [isMonthly, setIsMonthly] = useState(false);
-  const [showImpactPreview, setShowImpactPreview] = useState(false);
   
   const quickAmounts = [10, 25, 50, 100, 250];
   
@@ -48,14 +47,10 @@ export function DonationSlider({ value, onChange }: DonationSliderProps) {
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = Number(e.target.value);
     onChange(newValue);
-    setShowImpactPreview(true);
-    setTimeout(() => setShowImpactPreview(false), 2000);
   };
 
   const handleQuickAmount = (amount: number) => {
     onChange(amount);
-    setShowImpactPreview(true);
-    setTimeout(() => setShowImpactPreview(false), 2000);
   };
 
   const effectiveAmount = isMonthly ? value * 1.2 : value;
@@ -105,7 +100,7 @@ export function DonationSlider({ value, onChange }: DonationSliderProps) {
         }
       `}</style>
       
-      <div className="fixed right-8 top-1/2 -translate-y-1/2 z-30 w-80">
+      <div className="fixed right-8 top-1/2 -translate-y-1/2 z-30 w-80" data-ui-overlay="donation-slider">
         {/* Main Panel */}
         <motion.div
         initial={{ x: 100, opacity: 0 }}
@@ -220,34 +215,35 @@ export function DonationSlider({ value, onChange }: DonationSliderProps) {
           </label>
         </div>
 
-        {/* Impact Preview */}
-        <AnimatePresence>
-          {showImpactPreview && value > 0 && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="mb-4 overflow-hidden"
-            >
-              <div className="bg-black/30 rounded-lg p-3">
-                <p className="text-white/60 text-xs mb-2">You&apos;re providing:</p>
-                <div className="space-y-1">
+        {/* Impact Preview - Always Visible */}
+        {value > 0 && (
+          <div className="mb-4">
+            <div className="bg-black/30 rounded-lg p-3">
+              <p className="text-white/60 text-xs mb-2">You&apos;re providing:</p>
+              <div className="space-y-1">
+                <AnimatePresence mode="popLayout">
                   {getImpactItems(effectiveAmount).map((item, i) => (
                     <motion.div
                       key={item}
                       initial={{ x: -20, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: i * 0.1 }}
+                      exit={{ x: 20, opacity: 0 }}
+                      transition={{ delay: i * 0.05 }}
                       className="text-white/80 text-sm"
                     >
                       {item}
                     </motion.div>
                   ))}
-                </div>
+                </AnimatePresence>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {getImpactItems(effectiveAmount).length === 0 && (
+                <p className="text-white/50 text-sm italic">
+                  Adjust amount to see impact
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Progress Bar */}
         <div className="mb-6">

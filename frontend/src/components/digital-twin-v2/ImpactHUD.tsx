@@ -67,7 +67,7 @@ export function ImpactHUD({ donationAmount }: ImpactHUDProps) {
     'text-yellow-400';
 
   return (
-    <div className="fixed bottom-8 left-8 z-20">
+    <div className="fixed bottom-8 left-8 z-20" data-ui-overlay="impact-hud">
       <motion.div
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}

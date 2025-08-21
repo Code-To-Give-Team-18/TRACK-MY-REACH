@@ -24,7 +24,7 @@ interface ImmersiveClassroomSceneProps {
 }
 
 function CameraController() {
-  const { camera, gl } = useThree();
+  const { camera } = useThree();
   const mouseX = useRef(0);
   const mouseY = useRef(0);
   const targetX = useRef(0);
@@ -32,8 +32,22 @@ function CameraController() {
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
-      mouseX.current = (event.clientX / window.innerWidth) * 2 - 1;
-      mouseY.current = -(event.clientY / window.innerHeight) * 2 + 1;
+      // Check if mouse is over UI elements
+      const target = event.target as HTMLElement;
+      const isOverSlider = target.closest('[data-ui-overlay="donation-slider"]');
+      const isOverHUD = target.closest('[data-ui-overlay="impact-hud"]');
+      
+      if (isOverSlider || isOverHUD) {
+        // Center camera when over UI
+        mouseX.current = 0;
+        mouseY.current = 0;
+      } else {
+        // Follow mouse when over 3D scene
+        const x = (event.clientX / window.innerWidth) * 2 - 1;
+        const y = -(event.clientY / window.innerHeight) * 2 + 1;
+        mouseX.current = x;
+        mouseY.current = y;
+      }
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -48,15 +62,12 @@ function CameraController() {
   }, [camera]);
 
   useFrame(() => {
-    // Smooth camera movement following mouse
+    // Smooth camera movement
     targetX.current += (mouseX.current * 0.5 - targetX.current) * 0.05;
     targetY.current += (mouseY.current * 0.3 - targetY.current) * 0.05;
     
     camera.rotation.y = -targetX.current * 0.5;
     camera.rotation.x = targetY.current * 0.3;
-    
-    // Subtle head bobbing for immersion
-    camera.position.y = 1.2 + Math.sin(Date.now() * 0.001) * 0.02;
   });
 
   return null;
@@ -82,14 +93,20 @@ function DynamicLighting({ donationAmount }: { donationAmount: number }) {
         position={[5, 8, 5]}
         intensity={intensity}
         color={lightColor}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
+        castShadow={donationAmount > 25} // Only cast shadows when needed
+        shadow-mapSize={[1024, 1024]} // Reduced shadow resolution
+        shadow-camera-far={20}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
       />
       {donationAmount > 100 && (
         <animated.pointLight
           position={[0, 3, 0]}
           intensity={intensity}
           color="#fff5e6"
+          castShadow={false} // No shadows from point light
         />
       )}
     </>
@@ -101,42 +118,40 @@ function ParticleEffects({ donationAmount, tier }: { donationAmount: number; tie
 
   return (
     <>
-      {/* Dust particles that decrease with donation */}
+      {/* Minimal dust particles */}
       {donationAmount < 50 && (
         <Sparkles
-          count={100}
-          scale={10}
-          size={2}
-          speed={0.2}
-          opacity={0.3}
+          count={20} // Reduced from 100
+          scale={8}
+          size={1.5}
+          speed={0.1}
+          opacity={0.2}
           color="#8b7355"
         />
       )}
       
-      {/* Golden sparkles for transformations */}
-      {tier >= 2 && (
+      {/* Golden sparkles for major transformations only */}
+      {tier >= 3 && tier % 2 === 0 && ( // Only show on specific tiers
         <Sparkles
-          count={50}
-          scale={8}
-          size={3}
-          speed={0.5}
-          opacity={0.8}
+          count={15} // Reduced from 50
+          scale={6}
+          size={2}
+          speed={0.3}
+          opacity={0.6}
           color="#ffd700"
         />
       )}
 
-      {/* Magical sparkles for high donations */}
-      {donationAmount > 100 && (
-        <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
-          <Sparkles
-            count={30}
-            scale={6}
-            size={4}
-            speed={1}
-            opacity={1}
-            color="#ff69b4"
-          />
-        </Float>
+      {/* Remove Float wrapper for performance */}
+      {donationAmount > 200 && ( // Increased threshold
+        <Sparkles
+          count={10} // Reduced from 30
+          scale={5}
+          size={3}
+          speed={0.5}
+          opacity={0.8}
+          color="#ff69b4"
+        />
       )}
     </>
   );
@@ -157,21 +172,25 @@ export function ImmersiveClassroomScene({
 
   return (
     <Canvas
-      shadows
+      shadows="soft"
+      dpr={[1, 1.5]} // Limit pixel ratio for performance
       gl={{ 
-        antialias: true,
-        toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.2
+        antialias: false, // Disable for better performance
+        powerPreference: "high-performance",
+        alpha: false,
+        stencil: false,
+        depth: true
       }}
       onCreated={() => setLoaded(true)}
+      performance={{ min: 0.5 }} // Adaptive performance
     >
-      <fog attach="fog" args={['#f0f0f0', 5, 20]} />
+      <fog attach="fog" args={['#f0f0f0', 8, 25]} />
       
       <CameraController />
       <DynamicLighting donationAmount={donationAmount} />
       
-      {/* Environment for reflections */}
-      <Environment preset="apartment" intensity={0.3} />
+      {/* Simplified environment for performance */}
+      <Environment preset="sunset" intensity={0.2} resolution={64} />
       
       {/* Main classroom environment */}
       <ClassroomEnvironment 

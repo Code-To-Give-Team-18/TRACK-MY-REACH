@@ -168,8 +168,7 @@ export function ClassroomEnvironment({ donationAmount, tier }: ClassroomEnvironm
                   key={i}
                   position={[-0.6 + col * 0.25, -0.5 + row * 0.6, 0.2]}
                   args={[0.15, 0.4, 0.2]}
-                  castShadow
-                >
+                                  >
                   <meshStandardMaterial color={bookColors[i % 5]} />
                 </Box>
               );
@@ -239,8 +238,7 @@ export function ClassroomEnvironment({ donationAmount, tier }: ClassroomEnvironm
               key={i}
               position={[Math.cos(angle) * 0.8, -0.1, Math.sin(angle) * 0.8]}
               args={[1.2, 0.02, 0.2]}
-              castShadow
-            >
+                          >
               <meshStandardMaterial color={isWorking ? '#ffffff' : '#cccccc'} />
             </Box>
           ))}
@@ -284,7 +282,7 @@ export function ClassroomEnvironment({ donationAmount, tier }: ClassroomEnvironm
           <Box args={[0.3, 0.3, 0.3]} castShadow>
             <meshStandardMaterial color="#8b4513" />
           </Box>
-          <Box args={[0.1, 0.8, 0.1]} position={[0, 0.5, 0]} castShadow>
+          <Box args={[0.1, 0.8, 0.1]} position={[0, 0.5, 0]}>
             <meshStandardMaterial color="#228b22" />
           </Box>
         </group>
@@ -293,7 +291,7 @@ export function ClassroomEnvironment({ donationAmount, tier }: ClassroomEnvironm
           <Box args={[0.3, 0.3, 0.3]} castShadow>
             <meshStandardMaterial color="#8b4513" />
           </Box>
-          <Box args={[0.1, 0.8, 0.1]} position={[0, 0.5, 0]} castShadow>
+          <Box args={[0.1, 0.8, 0.1]} position={[0, 0.5, 0]}>
             <meshStandardMaterial color="#228b22" />
           </Box>
         </group>
