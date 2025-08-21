@@ -3,6 +3,9 @@ from peewee import *
 from playhouse.shortcuts import model_to_dict
 from typing import List, Union, Optional
 import time
+import uuid
+import random
+import string
 
 from apps.webui.internal.db import DB, JSONField
 
@@ -17,6 +20,12 @@ class User(Model):
     email = CharField()
     role = CharField()
     profile_image_url = TextField()
+    
+    # Referral fields - removed unique constraint to avoid migration issues
+    referral_code = CharField(max_length=20, null=True, index=True)  # User's own referral code
+    referred_by = CharField(max_length=255, null=True)  # ID of user who referred this user
+    referral_count = IntegerField(default=0, null=True)  # Number of successful referrals
+    referral_donations_total = DecimalField(max_digits=15, decimal_places=2, default=0.00, null=True)  # Total donations from referrals
 
     last_active_at = BigIntegerField()
     updated_at = BigIntegerField()
@@ -76,7 +85,30 @@ class UserUpdateForm(BaseModel):
 class UsersTable:
     def __init__(self, db):
         self.db = db
-        self.db.create_tables([User])
+        self.db.create_tables([User], safe=True)
+        # Populate referral codes for existing users without them
+        self._ensure_referral_codes()
+
+    def generate_referral_code(self, name: str = None) -> str:
+        """Generate a unique referral code"""
+        # Try to create a readable code first using name
+        if name:
+            # Use first 3 letters of name + random digits
+            prefix = ''.join(filter(str.isalpha, name.upper()))[:3]
+            if prefix:
+                for _ in range(5):  # Try 5 times with name prefix
+                    code = prefix + ''.join(random.choices(string.digits, k=5))
+                    if not User.select().where(User.referral_code == code).exists():
+                        return code
+        
+        # Fallback to random code
+        for _ in range(10):  # Try 10 times
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            if not User.select().where(User.referral_code == code).exists():
+                return code
+        
+        # Last resort: use UUID
+        return str(uuid.uuid4())[:8].upper()
 
     def insert_new_user(
         self,
@@ -86,7 +118,21 @@ class UsersTable:
         profile_image_url: str = "/user.png",
         role: str = "pending",
         oauth_sub: Optional[str] = None,
+        referred_by_code: Optional[str] = None,
     ) -> Optional[UserModel]:
+        # Generate unique referral code for new user
+        referral_code = self.generate_referral_code(name)
+        
+        # Find referrer if referral code provided
+        referred_by_id = None
+        if referred_by_code:
+            referrer = User.get_or_none(User.referral_code == referred_by_code)
+            if referrer:
+                referred_by_id = referrer.id
+                # Increment referrer's referral count
+                referrer.referral_count += 1
+                referrer.save()
+        
         user = UserModel(
             **{
                 "id": id,
@@ -100,7 +146,13 @@ class UsersTable:
                 "oauth_sub": oauth_sub,
             }
         )
-        result = User.create(**user.model_dump())
+        
+        # Add referral fields to the database creation
+        user_dict = user.model_dump()
+        user_dict['referral_code'] = referral_code
+        user_dict['referred_by'] = referred_by_id
+        
+        result = User.create(**user_dict)
         if result:
             return user
         else:
@@ -233,6 +285,79 @@ class UsersTable:
             return user.api_key
         except:
             return None
+    
+    def get_user_by_referral_code(self, referral_code: str) -> Optional[dict]:
+        """Get user by their referral code"""
+        try:
+            user = User.get(User.referral_code == referral_code)
+            return model_to_dict(user)
+        except:
+            return None
+    
+    def get_user_referrals(self, user_id: str) -> list:
+        """Get all users referred by a specific user"""
+        try:
+            referrals = User.select().where(User.referred_by == user_id)
+            return [model_to_dict(user) for user in referrals]
+        except:
+            return []
+    
+    def update_referral_donation_total(self, referrer_id: str, amount: float):
+        """Update the total donations from referrals for a user"""
+        try:
+            user = User.get(User.id == referrer_id)
+            user.referral_donations_total += amount
+            user.save()
+            return True
+        except:
+            return False
+    
+    def get_referral_stats(self, user_id: str) -> dict:
+        """Get referral statistics for a user"""
+        try:
+            user = User.get(User.id == user_id)
+            referrals = self.get_user_referrals(user_id)
+            
+            return {
+                'referral_code': user.referral_code,
+                'referral_count': user.referral_count,
+                'referral_donations_total': float(user.referral_donations_total),
+                'referred_by': user.referred_by,
+                'referrals': referrals
+            }
+        except:
+            return {
+                'referral_code': None,
+                'referral_count': 0,
+                'referral_donations_total': 0,
+                'referred_by': None,
+                'referrals': []
+            }
+    
+    def regenerate_referral_code(self, user_id: str) -> Optional[str]:
+        """Regenerate a user's referral code"""
+        try:
+            user = User.get(User.id == user_id)
+            new_code = self.generate_referral_code(user.name)
+            user.referral_code = new_code
+            user.save()
+            return new_code
+        except:
+            return None
+    
+    def _ensure_referral_codes(self):
+        """Ensure all existing users have referral codes"""
+        try:
+            users_without_codes = User.select().where(
+                (User.referral_code.is_null()) | (User.referral_code == '')
+            )
+            for user in users_without_codes:
+                if not user.referral_code:
+                    user.referral_code = self.generate_referral_code(user.name)
+                    user.save()
+        except Exception as e:
+            # Table might not exist yet during initial migration
+            pass
 
 
 Users = UsersTable(DB)
