@@ -3,8 +3,14 @@ from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel
 from apps.webui.models.users import Users
-from apps.webui.utils.auth import get_current_user
-from apps.webui.utils.misc import get_gravatar_url
+from utils.utils import (
+    get_password_hash,
+    get_current_user,
+    get_admin_user,
+    create_token,
+    create_api_key,
+)
+
 from apps.webui.internal.db import DB
 import json
 import uuid
