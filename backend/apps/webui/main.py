@@ -10,6 +10,7 @@ from apps.webui.routers import (
     configs,
     utils,
     files,
+    classrooms,
 )
 
 from config import (
@@ -81,6 +82,7 @@ app.include_router(auths.router, prefix="/auths", tags=["auths"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(files.router, prefix="/files", tags=["files"])
 app.include_router(utils.router, prefix="/utils", tags=["utils"])
+app.include_router(classrooms.router, tags=["classrooms"])
 
 
 
