@@ -25,6 +25,7 @@ Some examples (model - class or model name)::
 """
 
 from contextlib import suppress
+from decimal import Decimal, ROUND_HALF_EVEN
 
 import peewee as pw
 from peewee_migrate import Migrator
