@@ -188,7 +188,7 @@ export function ClassroomEnvironment({ donationAmount, tier }: ClassroomEnvironm
           <Box args={[0.1, 1.5, 1]} castShadow>
             <meshStandardMaterial color="#8b6f47" />
           </Box>
-          <Plane args={[0.08, 1.4, 0.9]} position={[0.05, 0, 0]}>
+          <Plane args={[0.9, 1.4]} position={[0.05, 0, 0]}>
             <animated.meshPhysicalMaterial
               color="#87ceeb"
               transparent
@@ -203,7 +203,7 @@ export function ClassroomEnvironment({ donationAmount, tier }: ClassroomEnvironm
           <Box args={[0.1, 1.5, 1]} castShadow>
             <meshStandardMaterial color="#8b6f47" />
           </Box>
-          <Plane args={[0.08, 1.4, 0.9]} position={[0.05, 0, 0]}>
+          <Plane args={[0.9, 1.4]} position={[0.05, 0, 0]}>
             <animated.meshPhysicalMaterial
               color="#87ceeb"
               transparent

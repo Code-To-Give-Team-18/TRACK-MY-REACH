@@ -229,7 +229,7 @@ export function DonationSlider({ value, onChange }: DonationSliderProps) {
               exit={{ height: 0, opacity: 0 }}
               className="mb-4 overflow-hidden"
             >
-              <div className="bg-white/5 rounded-lg p-3">
+              <div className="bg-black/30 rounded-lg p-3">
                 <p className="text-white/60 text-xs mb-2">You&apos;re providing:</p>
                 <div className="space-y-1">
                   {getImpactItems(effectiveAmount).map((item, i) => (
@@ -257,7 +257,7 @@ export function DonationSlider({ value, onChange }: DonationSliderProps) {
               {Math.min((value / 250) * 100, 100).toFixed(0)}%
             </span>
           </div>
-          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+          <div className="h-2 bg-black/30 rounded-full overflow-hidden">
             <motion.div
               animate={{ width: `${Math.min((value / 250) * 100, 100)}%` }}
               transition={{ type: 'spring', stiffness: 100 }}
