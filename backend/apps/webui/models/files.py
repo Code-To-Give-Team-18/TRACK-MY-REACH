@@ -63,7 +63,7 @@ class FileForm(BaseModel):
 class FilesTable:
     def __init__(self, db):
         self.db = db
-        self.db.create_tables([File])
+        self.db.create_tables([File], safe=True)
 
     def insert_new_file(self, user_id: str, form_data: FileForm) -> Optional[FileModel]:
         file = FileModel(

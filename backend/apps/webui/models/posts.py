@@ -9,7 +9,7 @@ from apps.webui.models.users import User
 class Post(Model):
     id = CharField(max_length=255, unique=True, primary_key=True, default=lambda: str(uuid.uuid4()))
     child = ForeignKeyField(Child, backref='posts', on_delete='CASCADE')
-    author = ForeignKeyField(User, backref='authored_posts', on_delete='SET_NULL', null=True)
+    author = ForeignKeyField(User, backref='authored_posts', on_delete='SET NULL', null=True)
     title = CharField(max_length=255)
     content = TextField()
     post_type = CharField(max_length=50, default='update')  # 'update', 'story', 'achievement', 'thank_you'

@@ -99,7 +99,7 @@ class AddUserForm(SignupForm):
 class AuthsTable:
     def __init__(self, db):
         self.db = db
-        self.db.create_tables([Auth])
+        self.db.create_tables([Auth], safe=True)
 
     def insert_new_auth(
         self,

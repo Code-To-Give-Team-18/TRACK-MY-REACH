@@ -21,11 +21,11 @@ class User(Model):
     role = CharField()
     profile_image_url = TextField()
     
-    # Referral fields
-    referral_code = CharField(max_length=20, unique=True, null=True)  # User's own referral code
+    # Referral fields - removed unique constraint to avoid migration issues
+    referral_code = CharField(max_length=20, null=True, index=True)  # User's own referral code
     referred_by = CharField(max_length=255, null=True)  # ID of user who referred this user
-    referral_count = IntegerField(default=0)  # Number of successful referrals
-    referral_donations_total = DecimalField(max_digits=15, decimal_places=2, default=0.00)  # Total donations from referrals
+    referral_count = IntegerField(default=0, null=True)  # Number of successful referrals
+    referral_donations_total = DecimalField(max_digits=15, decimal_places=2, default=0.00, null=True)  # Total donations from referrals
 
     last_active_at = BigIntegerField()
     updated_at = BigIntegerField()
@@ -85,7 +85,9 @@ class UserUpdateForm(BaseModel):
 class UsersTable:
     def __init__(self, db):
         self.db = db
-        self.db.create_tables([User])
+        self.db.create_tables([User], safe=True)
+        # Populate referral codes for existing users without them
+        self._ensure_referral_codes()
 
     def generate_referral_code(self, name: str = None) -> str:
         """Generate a unique referral code"""
@@ -342,6 +344,20 @@ class UsersTable:
             return new_code
         except:
             return None
+    
+    def _ensure_referral_codes(self):
+        """Ensure all existing users have referral codes"""
+        try:
+            users_without_codes = User.select().where(
+                (User.referral_code.is_null()) | (User.referral_code == '')
+            )
+            for user in users_without_codes:
+                if not user.referral_code:
+                    user.referral_code = self.generate_referral_code(user.name)
+                    user.save()
+        except Exception as e:
+            # Table might not exist yet during initial migration
+            pass
 
 
 Users = UsersTable(DB)
