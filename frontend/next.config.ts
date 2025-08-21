@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizeCss: true,
   },
+  transpilePackages: ['three'],
 };
 
 export default nextConfig;
