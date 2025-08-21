@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/providers/auth-provider";
 import { QueryProvider } from "@/providers/query-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
+import ClientLayout from "@/components/layout/ClientLayout";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OpenBook",
-  description: "Full-stack application with Python backend and Next.js frontend",
+  title: "REACH Foundation - Every Child Deserves to Dream",
+  description: "Help provide education, meals, and hope to underprivileged K3 students across Hong Kong. Join us in changing lives, one child at a time.",
 };
 
 export default function RootLayout({
@@ -33,7 +34,9 @@ export default function RootLayout({
         <ThemeProvider defaultTheme="system">
           <QueryProvider>
             <AuthProvider>
-              {children}
+              <ClientLayout>
+                {children}
+              </ClientLayout>
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>

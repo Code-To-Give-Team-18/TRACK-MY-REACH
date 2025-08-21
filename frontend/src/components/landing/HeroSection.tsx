@@ -55,7 +55,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-amber-50 via-orange-50 to-white">
+    <section className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-amber-50 via-orange-50 to-white -mt-20">
       {/* Decorative Background Pattern */}
       <div className="absolute inset-0">
         <div className="absolute top-0 left-0 w-96 h-96 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -64,7 +64,7 @@ export default function HeroSection() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+      <div className="relative z-10 flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 pt-32 pb-16">
         <div className="text-center max-w-5xl mx-auto">
           {/* Warm Welcome Badge */}
           <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg mb-8">
