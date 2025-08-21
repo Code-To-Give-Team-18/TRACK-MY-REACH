@@ -4,6 +4,7 @@ import asyncio
 
 from apps.webui.models.users import Users
 from utils.utils import decode_token
+from apps.socket.classroom_events import classroom_manager
 
 sio = socketio.AsyncServer(cors_allowed_origins=[], async_mode="asgi")
 app = socketio.ASGIApp(sio, socketio_path="/ws/socket.io")
@@ -123,8 +124,37 @@ async def remove_after_timeout(sid, model_id):
         pass
 
 
+@sio.on("join-classroom")
+async def join_classroom(sid, data):
+    classroom_id = data.get("classroomId")
+    if classroom_id:
+        result = await classroom_manager.join_classroom(sid, classroom_id)
+        await sio.emit("classroom-joined", result, to=sid)
+        await sio.emit("classroom-user-count", {
+            "classroomId": classroom_id,
+            "count": len(classroom_manager.get_classroom_users(classroom_id))
+        }, room=classroom_id)
+
+
+@sio.on("leave-classroom")
+async def leave_classroom(sid, data):
+    await classroom_manager.leave_classroom(sid)
+    await sio.emit("classroom-left", {"status": "left"}, to=sid)
+
+
+@sio.on("new-donation")
+async def new_donation(sid, data):
+    classroom_id = data.get("classroomId")
+    if classroom_id:
+        broadcast_data = await classroom_manager.broadcast_donation(classroom_id, data)
+        if broadcast_data:
+            for user_sid in classroom_manager.get_classroom_users(classroom_id):
+                await sio.emit(broadcast_data["event"], broadcast_data["data"], to=user_sid)
+
+
 @sio.event
 async def disconnect(sid):
+    await classroom_manager.leave_classroom(sid)
     if sid in SESSION_POOL:
         user_id = SESSION_POOL[sid]
         del SESSION_POOL[sid]
