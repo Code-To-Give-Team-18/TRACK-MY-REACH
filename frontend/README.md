@@ -7,6 +7,7 @@ A production-ready Next.js application with TypeScript, Tailwind CSS, and modern
 - **Framework:** Next.js 15.5 with App Router
 - **Language:** TypeScript 5
 - **Styling:** Tailwind CSS v4
+- **3D Graphics:** Three.js with React Three Fiber
 - **State Management:** Zustand with persistence
 - **Authentication:** JWT-based with cookie storage
 - **API Client:** Axios with interceptors
@@ -30,6 +31,7 @@ frontend/
 │   │   │   ├── profile/      # User profile
 │   │   │   └── settings/     # User settings
 │   │   ├── test-auth/        # Authentication testing page
+│   │   ├── three-demo/       # Three.js demonstration page
 │   │   ├── layout.tsx        # Root layout with providers
 │   │   ├── page.tsx          # Home page
 │   │   ├── error.tsx         # Error boundary
@@ -39,7 +41,8 @@ frontend/
 │   │   ├── ui/              # Base UI components
 │   │   ├── features/        # Feature-specific components
 │   │   ├── layout/          # Layout components
-│   │   └── auth/            # Auth components
+│   │   ├── auth/            # Auth components
+│   │   └── three/           # Three.js/3D components
 │   ├── lib/                  # Utility functions and shared logic
 │   │   └── axios.ts         # Configured axios instance
 │   ├── hooks/                # Custom React hooks
@@ -72,14 +75,26 @@ frontend/
 # Install dependencies
 npm install
 
-# Copy environment variables
-cp .env.example .env.local
+# Copy environment variables (if .env.example exists)
+cp .env.example .env.local 2>/dev/null || echo "No .env.example found, creating .env.local"
 
 # Update .env.local with your backend URL (default: http://localhost:8080)
 # NEXT_PUBLIC_API_URL=http://localhost:8080
 
 # Run development server
 npm run dev
+```
+
+### Three.js Setup (Already Installed)
+
+The Three.js dependencies are already installed. If you need to reinstall them:
+
+```bash
+# For Next.js 15 with React 19
+npm install three @react-three/fiber@rc @react-three/drei
+
+# TypeScript types
+npm install --save-dev @types/three
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the application.
@@ -102,6 +117,142 @@ npm run start        # Start production server
 npm run lint         # Run ESLint
 npm run format       # Format code with Prettier
 npm run type-check   # Run TypeScript compiler check
+```
+
+## 🎮 Three.js Integration
+
+### Overview
+
+The application includes Three.js for 3D graphics rendering, using React Three Fiber (R3F) as the React renderer and @react-three/drei for helpful utilities and abstractions.
+
+### Dependencies
+
+- **three**: Core Three.js library for 3D graphics
+- **@react-three/fiber**: React renderer for Three.js (using RC version for Next.js 15 compatibility)
+- **@react-three/drei**: Collection of useful helpers and abstractions for R3F
+- **@types/three**: TypeScript definitions for Three.js
+
+### Basic Usage
+
+Create 3D scenes as React components using the Canvas component:
+
+```tsx
+'use client';  // Required for Three.js components in Next.js app router
+
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Box } from '@react-three/drei';
+
+export default function My3DScene() {
+  return (
+    <Canvas camera={{ position: [0, 0, 5] }}>
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} />
+      <Box>
+        <meshStandardMaterial color="orange" />
+      </Box>
+      <OrbitControls />
+    </Canvas>
+  );
+}
+```
+
+### Example Scene
+
+Visit `/three-demo` to see an interactive 3D scene with:
+- Clickable and hoverable 3D objects
+- Camera orbit controls
+- Dynamic lighting
+- Material effects
+
+### Creating 3D Components
+
+1. **Always use 'use client' directive** for components with Three.js
+2. **Place 3D components in `src/components/three/`** for organization
+3. **Wrap scenes in Canvas component** from @react-three/fiber
+4. **Use TypeScript** for better type safety with Three.js objects
+
+Example component structure:
+```tsx
+// src/components/three/MyModel.tsx
+'use client';
+
+import { useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { Mesh } from 'three';
+
+export function MyModel() {
+  const meshRef = useRef<Mesh>(null);
+  
+  useFrame((state, delta) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += delta;
+    }
+  });
+  
+  return (
+    <mesh ref={meshRef}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial color="hotpink" />
+    </mesh>
+  );
+}
+```
+
+### Performance Considerations
+
+- Use `React.memo()` for complex 3D components
+- Implement LOD (Level of Detail) for complex models
+- Use instancing for repeated geometries
+- Optimize textures and models before importing
+- Consider using `@react-three/drei`'s performance helpers
+
+### Common Patterns
+
+#### Loading 3D Models
+```tsx
+import { useGLTF } from '@react-three/drei';
+
+function Model() {
+  const { scene } = useGLTF('/model.glb');
+  return <primitive object={scene} />;
+}
+```
+
+#### Animation with useFrame
+```tsx
+import { useFrame } from '@react-three/fiber';
+
+function AnimatedBox() {
+  const ref = useRef<Mesh>(null);
+  
+  useFrame((state) => {
+    if (ref.current) {
+      ref.current.rotation.x = Math.sin(state.clock.elapsedTime);
+    }
+  });
+  
+  return <mesh ref={ref}>...</mesh>;
+}
+```
+
+#### Interaction Events
+```tsx
+function InteractiveObject() {
+  const [hovered, setHover] = useState(false);
+  const [clicked, setClick] = useState(false);
+  
+  return (
+    <mesh
+      scale={clicked ? 1.5 : 1}
+      onClick={() => setClick(!clicked)}
+      onPointerOver={() => setHover(true)}
+      onPointerOut={() => setHover(false)}
+    >
+      <boxGeometry />
+      <meshStandardMaterial color={hovered ? 'hotpink' : 'orange'} />
+    </mesh>
+  );
+}
 ```
 
 ## 🔐 Authentication
@@ -505,6 +656,7 @@ npm run dev  # Runs on http://localhost:3000
 - `/signup` - User registration
 - `/forgot-password` - Password reset
 - `/test-auth` - Authentication testing
+- `/three-demo` - Three.js interactive 3D demonstration
 
 **Protected Routes:**
 - `/dashboard` - User dashboard
