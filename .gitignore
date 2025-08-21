@@ -308,3 +308,4 @@ dist
 
 *.md
 !readme.md
+!setup_guide.md
