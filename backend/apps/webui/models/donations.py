@@ -1,5 +1,6 @@
 from peewee import *
-from datetime import datetime
+from playhouse.shortcuts import model_to_dict
+from datetime import datetime, timedelta
 import uuid
 from apps.webui.internal.db import DB
 from apps.webui.models.users import User
@@ -17,6 +18,7 @@ class Donation(Model):
     donation_type = CharField(max_length=50, default='child')  # 'child' or 'region'
     is_anonymous = BooleanField(default=False)
     message = TextField(null=True)
+    referral_code = CharField(max_length=20, null=True)  # Referral code used for this donation
     transaction_id = CharField(max_length=255, null=True)
     payment_method = CharField(max_length=50, null=True)
     status = CharField(max_length=50, default='completed')  # pending, completed, failed
@@ -57,11 +59,13 @@ class DonationsTable:
         currency: str = 'HKD',
         is_anonymous: bool = False,
         message: str = None,
+        referral_code: str = None,
         transaction_id: str = None,
         payment_method: str = None
     ) -> dict:
         from apps.webui.models.children import Children
         from apps.webui.models.regions import Regions
+        from apps.webui.models.users import Users
         
         # Determine donation type and get region if donating to child
         if child_id:
@@ -71,6 +75,14 @@ class DonationsTable:
                 region_id = child['region_id']
         else:
             donation_type = 'region'
+        
+        # Handle referral tracking
+        if referral_code:
+            # Find the user who owns this referral code
+            referrer = Users.get_user_by_referral_code(referral_code)
+            if referrer and referrer['id'] != user_id:  # Can't use own referral code
+                # Update referrer's donation total from referrals
+                Users.update_referral_donation_total(referrer['id'], amount)
         
         # Create donation record
         donation = Donation.create(
@@ -82,6 +94,7 @@ class DonationsTable:
             donation_type=donation_type,
             is_anonymous=is_anonymous,
             message=message,
+            referral_code=referral_code,
             transaction_id=transaction_id,
             payment_method=payment_method
         )
@@ -234,6 +247,7 @@ class DonationsTable:
             'donation_type': donation.donation_type,
             'is_anonymous': donation.is_anonymous,
             'message': donation.message,
+            'referral_code': donation.referral_code,
             'transaction_id': donation.transaction_id,
             'payment_method': donation.payment_method,
             'status': donation.status,

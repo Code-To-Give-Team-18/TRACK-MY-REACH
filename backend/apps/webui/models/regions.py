@@ -1,4 +1,5 @@
 from peewee import *
+from playhouse.shortcuts import model_to_dict
 from datetime import datetime
 import uuid
 from apps.webui.internal.db import DB

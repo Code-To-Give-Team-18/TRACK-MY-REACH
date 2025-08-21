@@ -5,6 +5,7 @@ from apps.webui.internal.db import DB
 from apps.webui.models.children import Child
 
 
+
 class Video(Model):
     id = CharField(max_length=255, unique=True, primary_key=True, default=lambda: str(uuid.uuid4()))
     child = ForeignKeyField(Child, backref='videos', on_delete='CASCADE')

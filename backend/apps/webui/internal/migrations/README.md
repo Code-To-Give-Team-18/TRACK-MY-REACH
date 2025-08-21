@@ -19,6 +19,8 @@ You will need to create a migration file to ensure that existing databases are u
 
    ```bash
    pw_migrate create --auto --auto-source apps.webui.models --database sqlite:///webui.db --directory apps/webui/internal/migrations initial_migration
+
+   pw_migrate create --auto --auto-source apps.webui.models --database sqlite:///webui.db --directory apps/webui/internal/migrations consolidate_db
    
    ```
 

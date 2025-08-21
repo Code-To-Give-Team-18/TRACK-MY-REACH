@@ -1,5 +1,5 @@
 from peewee import *
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 from apps.webui.internal.db import DB
 from apps.webui.models.children import Child
@@ -14,6 +14,8 @@ class Post(Model):
     content = TextField()
     post_type = CharField(max_length=50, default='update')  # 'update', 'story', 'achievement', 'thank_you'
     media_urls = TextField(null=True)  # JSON array of media URLs
+    # video link should be cascade down to children video link upon post creation
+    video_link = CharField(max_length=500, null=True)
     likes_count = IntegerField(default=0)
     comments_count = IntegerField(default=0)
     is_published = BooleanField(default=True)

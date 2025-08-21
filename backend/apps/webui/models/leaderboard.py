@@ -1,5 +1,6 @@
 from peewee import *
-from datetime import datetime, timedelta
+from playhouse.shortcuts import model_to_dict
+from datetime import datetime, timedelta, date
 import uuid
 from apps.webui.internal.db import DB
 from apps.webui.models.users import User
