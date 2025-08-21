@@ -3,8 +3,6 @@ import sys
 import logging
 import importlib.metadata
 import pkgutil
-import chromadb
-from chromadb import Settings
 from base64 import b64encode
 from bs4 import BeautifulSoup
 from typing import TypeVar, Generic, Union
@@ -457,28 +455,6 @@ else:
 
 CUSTOM_NAME = os.environ.get("CUSTOM_NAME", "")
 
-if CUSTOM_NAME:
-    try:
-        r = requests.get(f"https://api.openwebui.com/api/v1/custom/{CUSTOM_NAME}")
-        data = r.json()
-        if r.ok:
-            if "logo" in data:
-                WEBUI_FAVICON_URL = url = (
-                    f"https://api.openwebui.com{data['logo']}"
-                    if data["logo"][0] == "/"
-                    else data["logo"]
-                )
-
-                r = requests.get(url, stream=True)
-                if r.status_code == 200:
-                    with open(f"{STATIC_DIR}/favicon.png", "wb") as f:
-                        r.raw.decode_content = True
-                        shutil.copyfileobj(r.raw, f)
-
-            WEBUI_NAME = data["name"]
-    except Exception as e:
-        log.exception(e)
-        pass
 
 
 ####################################

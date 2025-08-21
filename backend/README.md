@@ -1,8 +1,5 @@
 # Backend Documentation
 
-## Overview
-
-This is a Python-based backend application built with FastAPI that provides a comprehensive web API with authentication, user management, file handling, and real-time communication capabilities. The application appears to be a customized version of OpenWebUI (formerly Ollama-WebUI) branded as "OpenBook".
 
 ## Technology Stack
 
@@ -272,7 +269,6 @@ start_windows.bat
 
 ## Notes
 
-- The application appears to be a fork or customization of OpenWebUI
 - Supports both standalone deployment and integration with existing services
 - Includes extensive logging configuration for debugging
 - Designed for scalability with support for multiple database backends
