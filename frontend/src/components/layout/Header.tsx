@@ -18,7 +18,8 @@ import {
   LogOut,
   HandHeart,
   Settings,
-  LayoutDashboard
+  LayoutDashboard,
+  Plus
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -193,7 +194,19 @@ export default function Header() {
                           <User className="w-4 h-4 text-gray-600" />
                           <span className="text-gray-700">My Profile</span>
                         </Link>
-                        
+
+                        {/*Show "Create Post" only if the user is an admin*/}
+                        {user.role === 'admin' && (
+                          <Link
+                            href="/create-post"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
+                          >
+                            <Plus className="w-4 h-4 text-gray-600" />
+                            <span className="text-gray-700">Create Post</span>
+                          </Link>
+                        )}
+
                         <Link
                           href="/settings"
                           onClick={() => setIsUserMenuOpen(false)}
@@ -297,6 +310,15 @@ export default function Header() {
                         My Profile
                       </Button>
                     </Link>
+
+                    {user.role === 'admin' && (
+                      <Link href="/create-post" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full rounded-full justify-start">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create Post
+                        </Button>
+                      </Link>
+                    )}
                     
                     <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)}>
                       <Button variant="outline" className="w-full rounded-full justify-start">
