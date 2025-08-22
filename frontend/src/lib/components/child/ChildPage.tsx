@@ -3,20 +3,9 @@
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react";
+import { ChildInfo } from "./components/ChildInfo";
+import { Child } from "./shared/types/Child";
 
-const DonateButton = () => {
-  return (
-    <button
-      className="py-[12px] px-[20px] bg-[#F1204A] hover:bg-[#2DCCD3] text-white hover:text-black font-semibold"
-      style={{
-        borderRadius: "12px",
-        transitionDuration: "0.3s",
-      }}
-    >
-      Donate now
-    </button>
-  );
-}
 
 const Posts = () => {
   return (
@@ -57,56 +46,6 @@ const FanClub = () => {
           <h1>Hillary Clinton</h1>
           <h1>Prince Andrew</h1>
           <h1>Obama</h1>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-interface Child {
-    id: string;
-    region_id: string;
-    region_name: string;
-    name: string;
-    age: number;
-    school: string;
-    grade: string;
-    description: string;
-    bio: string;
-    video_link: string;
-    picture_link: string;
-    follower_count: number;
-    total_received: number;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
-};
-
-interface ChildInfoProps {
-  child: Child;
-};
-
-const ChildInfo: React.FC<ChildInfoProps> = ({ child }) => {
-  if (!child) return;
-
-  return(
-    <div className="flex gap-20 h-dvh">
-      <div className="flex justify-center items-center">
-        <Image
-          src="https://static.wikia.nocookie.net/no-game-no-life/images/d/dc/Shiro_Anime_HQ.png/revision/latest?cb=20210523001016"
-          alt="no game no life"
-          width={300}
-          height={400}
-        />
-      </div>
-      <div className="flex flex-col items-start justify-center gap-8">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-4xl font-bold">{child.name}</h1>
-          <p className="text-md">{child.description}</p>
-        </div>
-        <div className="flex items-center justify-center w-full">
-          <DonateButton/>
         </div>
       </div>
     </div>
