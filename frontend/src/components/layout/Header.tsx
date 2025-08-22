@@ -310,6 +310,15 @@ export default function Header() {
                         My Profile
                       </Button>
                     </Link>
+
+                    {user.role === 'admin' && (
+                      <Link href="/create-post" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full rounded-full justify-start">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create Post
+                        </Button>
+                      </Link>
+                    )}
                     
                     <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)}>
                       <Button variant="outline" className="w-full rounded-full justify-start">

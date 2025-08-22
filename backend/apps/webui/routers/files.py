@@ -19,6 +19,8 @@ from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
 
 from pydantic import BaseModel
 import json
+import io
+from PIL import Image
 
 from apps.webui.models.files import (
     Files,
@@ -218,7 +220,7 @@ async def upload_image(
 async def get_image(id: str, user=Depends(get_verified_user)):
     file = Files.get_file_by_id(id)
 
-    if file and file.file_type == "image" or file.meta.get("content_type", "").startswith("image"):
+    if file and (file.file_type == "image" or file.meta.get("content_type", "").startswith("image")):
         file_path = Path(file.meta["path"])
 
         if file_path.is_file():
