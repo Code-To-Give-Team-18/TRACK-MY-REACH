@@ -18,10 +18,13 @@ interface HongKongMapOverheadProps {
   regions: Region[];
 }
 
-// Unified color for unselected districts
-const DEFAULT_DISTRICT_COLOR = '#d4d4d8'; // Light neutral gray
-const SELECTED_COLOR = '#dc2626'; // Red when selected
-const HOVER_COLOR = '#fca5a5'; // Light red when hovered
+// Vibrant color scheme for districts
+const DEFAULT_DISTRICT_COLOR = '#fef3c7'; // Warm sand/beige color for land
+const SELECTED_COLOR = '#6366f1'; // Vibrant indigo when selected
+const HOVER_COLOR = '#a78bfa'; // Light purple when hovered
+const BORDER_COLOR = '#f59e0b'; // Amber border for districts
+const SEA_COLOR_LIGHT = '#67e8f9'; // Light cyan for water
+const SEA_COLOR_DEEP = '#0891b2'; // Deep cyan for gradient
 
 function DistrictShape({ 
   feature, 
@@ -103,8 +106,10 @@ function DistrictShape({
             hovered ? HOVER_COLOR : 
             DEFAULT_DISTRICT_COLOR
           }
-          emissive={isSelected ? SELECTED_COLOR : hovered ? HOVER_COLOR : '#000000'}
-          emissiveIntensity={isSelected ? 0.3 : hovered ? 0.15 : 0}
+          emissive={isSelected ? SELECTED_COLOR : hovered ? HOVER_COLOR : '#fbbf24'}
+          emissiveIntensity={isSelected ? 0.3 : hovered ? 0.15 : 0.02}
+          roughness={0.9}
+          metalness={0}
         />
       </mesh>
       
@@ -114,7 +119,7 @@ function DistrictShape({
         position={[0, 0.01, 0]}
       >
         <edgesGeometry args={[new THREE.ShapeGeometry(shape)]} />
-        <lineBasicMaterial color="#475569" linewidth={2} />
+        <lineBasicMaterial color={BORDER_COLOR} linewidth={2} opacity={0.8} transparent />
       </lineSegments>
       
       {/* Label */}
@@ -122,10 +127,12 @@ function DistrictShape({
         <Text
           position={[centroid[0], 0.5, centroid[1]]}
           fontSize={0.4}
-          color={isSelected ? '#1e40af' : '#475569'}
+          color={isSelected ? '#4338ca' : '#6b21a8'}
           anchorX="center"
           anchorY="middle"
           rotation={[-Math.PI / 2, 0, 0]}
+          outlineWidth={0.02}
+          outlineColor="#ffffff"
         >
           {feature.properties.name}
         </Text>
@@ -173,25 +180,46 @@ function MapScene({ selectedRegion, onRegionSelect, regions }: HongKongMapOverhe
 
   return (
     <>
-      {/* Lighting */}
-      <ambientLight intensity={0.7} />
+      {/* Enhanced lighting for vibrant colors */}
+      <ambientLight intensity={0.8} color="#fff7ed" />
       <directionalLight 
         position={[10, 20, 10]} 
-        intensity={1}
+        intensity={1.2}
+        color="#ffffff"
         castShadow
         shadow-mapSize={[2048, 2048]}
       />
-      <directionalLight position={[-10, 15, -10]} intensity={0.4} />
-      <pointLight position={[0, 10, 0]} intensity={0.3} />
+      <directionalLight position={[-10, 15, -10]} intensity={0.5} color="#fef3c7" />
+      <pointLight position={[0, 10, 0]} intensity={0.4} color="#ddd6fe" />
+      <hemisphereLight intensity={0.3} color="#67e8f9" groundColor="#f59e0b" />
       
-      {/* Background water/sea */}
+      {/* Background water/sea with gradient effect */}
       <mesh 
         rotation={[-Math.PI / 2, 0, 0]} 
-        position={[0, -0.1, 0]}
+        position={[0, -0.15, 0]}
         receiveShadow
       >
         <planeGeometry args={[50, 50]} />
-        <meshStandardMaterial color="#e0f2fe" />
+        <meshStandardMaterial 
+          color={SEA_COLOR_LIGHT}
+          emissive={SEA_COLOR_DEEP}
+          emissiveIntensity={0.05}
+          roughness={0.95}
+          metalness={0}
+        />
+      </mesh>
+      
+      {/* Additional water depth layer for visual richness */}
+      <mesh 
+        rotation={[-Math.PI / 2, 0, 0]} 
+        position={[0, -0.2, 0]}
+      >
+        <planeGeometry args={[48, 48]} />
+        <meshStandardMaterial 
+          color={SEA_COLOR_DEEP}
+          opacity={0.3}
+          transparent
+        />
       </mesh>
       
       {/* Render districts from GeoJSON data */}
