@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
+import { useEffect } from "react";
 
 const DonateButton = () => {
   return (
@@ -45,12 +46,23 @@ export const ChildPage = () => {
   const searchParams = useSearchParams();
   const childId = searchParams.get("id");
 
+  const fetchChild = async () => {
+    const response = await fetch("http://localhost:8080/api/v1/children");
+    const json = await response.json();
+    console.log(json);
+  };
+
+  useEffect(() => {
+    fetchChild();
+
+  }, [])
+
   return (
-    <div className="flex">
+    <div className="flex w-full h-full justify-center items-center">
       <div className="flex flex-col">
         <ChildInfo />
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-col justify-center">
         <DonateButton/>
         <RecentDonations/>
         <Posts/>
