@@ -25,3 +25,4 @@ class PostResponse(BaseModel):
     is_featured: bool
     created_at: Optional[str]
     updated_at: Optional[str]
+    follow_status: Optional[bool] = None  # Added field to indicate follow status

@@ -1,11 +1,12 @@
 "use client"
 
 import Image from "next/image"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react";
 import { ChildInfo } from "./components/ChildInfo";
 import { Child } from "./shared/types/Child";
-
+import { useChild } from "./hooks/useChild";
+import { ChildProvider } from "./contexts/ChildContext";
 
 const Posts = () => {
   return (
@@ -55,29 +56,20 @@ const FanClub = () => {
 export const ChildPage = () => {
   const searchParams = useSearchParams();
   const childId = searchParams.get("id");
-
-  const [child, setChild] = useState<Child>();
-
-  const fetchChild = async () => {
-    const response = await fetch(`http://localhost:8080/api/v1/children/${childId}`);
-    const childBody = await response.json();
-    setChild(childBody);
-  };
-
-  useEffect(() => {
-    fetchChild();
-  }, [])
+  if (!childId) return;
 
   return (
-    <div className="flex flex-col w-full justify-center items-center">
-      <div className="flex flex-col h-[80dvh]">
-        <ChildInfo child={child}/>
-      </div>
-      <FanClub/>
+    <ChildProvider childId={childId}>
+      <div className="flex flex-col w-full justify-center items-center">
+        <div className="flex flex-col h-[80dvh]">
+          <ChildInfo/>
+        </div>
+        <FanClub/>
 
-      <div className="flex flex-col justify-center">
-        <Posts/>
+        <div className="flex flex-col justify-center">
+          <Posts/>
+        </div>
       </div>
-    </div>
+    </ChildProvider>
   );
 }
