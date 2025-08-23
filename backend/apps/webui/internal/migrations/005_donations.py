@@ -1,56 +1,71 @@
-# apps/webui/internal/migrations/005_donations_restructure.py
+# apps/webui/internal/migrations/006_donation_rebuild_nullable_user.py
 from playhouse.migrate import *
 import peewee as pw
 from peewee_migrate import Migrator
 
 def migrate(migrator: Migrator, database: pw.Database, *, fake: bool = False):
-    # 1) Make user_id NULLable
-    try:
-        # SQLite path: drop NOT NULL
-        if isinstance(migrator, SqliteMigrator):
-            migrator.drop_not_null('donation', 'user_id')
-        else:
-            # Postgres/MySQL path
-            migrator.sql('ALTER TABLE donation ALTER COLUMN user_id DROP NOT NULL')
-    except Exception as e:
-        print(f"[WARN] Could not make user_id nullable: {e}")
+    is_sqlite = isinstance(database, pw.SqliteDatabase)
 
-    # 2) Drop 'message' column if it exists
-    try:
-        # Works cross-db; SQLite will rebuild table behind the scenes
-        migrator.drop_column('donation', 'message')
-    except Exception as e:
-        print(f"[WARN] Could not drop 'message': {e}")
-
-    # 3) Donation type constraint
-    # SQLite cannot add a table-level CHECK via ALTER TABLE. Enforce in app code.
-    # For Postgres, we can add a constraint:
-    try:
-        if not isinstance(migrator, SqliteMigrator):
-            migrator.sql(
-                "ALTER TABLE donation "
-                "ADD CONSTRAINT donation_type_check "
-                "CHECK (donation_type IN ('Quick','Guest','Standard'))"
+    if is_sqlite:
+        database.execute_sql("PRAGMA foreign_keys=OFF;")
+        database.execute_sql("""
+            CREATE TABLE donation_new (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NULL,
+                child_id TEXT NULL,
+                region_id TEXT NULL,
+                amount NUMERIC NOT NULL,
+                currency TEXT DEFAULT 'HKD',
+                donation_type TEXT DEFAULT 'Standard',
+                is_anonymous INTEGER DEFAULT 0,
+                referral_code TEXT NULL,
+                transaction_id TEXT NULL,
+                payment_method TEXT NULL,
+                status TEXT DEFAULT 'completed',
+                created_at DATETIME
+            );
+        """)
+        database.execute_sql("""
+            INSERT INTO donation_new (
+                id, user_id, child_id, region_id, amount, currency,
+                donation_type, is_anonymous, referral_code, transaction_id,
+                payment_method, status, created_at
             )
-        else:
-            print("[INFO] Skipping CHECK constraint on SQLite; enforced at application layer.")
-    except Exception as e:
-        print(f"[WARN] Could not add donation_type CHECK constraint: {e}")
+            SELECT
+                id,
+                user_id,
+                child_id,
+                region_id,
+                amount,
+                COALESCE(currency, 'HKD'),
+                CASE
+                    WHEN donation_type IN ('Quick','Guest','Standard') THEN donation_type
+                    ELSE 'Standard'
+                END,
+                COALESCE(is_anonymous, 0),
+                referral_code,
+                transaction_id,
+                payment_method,
+                COALESCE(status, 'completed'),
+                created_at
+            FROM donation;
+        """)
+        database.execute_sql("DROP TABLE donation;")
+        database.execute_sql("ALTER TABLE donation_new RENAME TO donation;")
+        database.execute_sql("PRAGMA foreign_keys=ON;")
+    else:
+        try:
+            migrator.remove_fields('donation', 'message')
+        except Exception:
+            pass
+        try:
+            migrator.drop_not_null('donation', 'user_id')
+        except Exception:
+            pass
 
 def rollback(migrator: Migrator, database: pw.Database, *, fake: bool = False):
-    # 1) Re-add 'message' column (nullable)
+    # Minimal rollback: re-add message if needed; we don’t force NOT NULL back on user_id
     try:
-        migrator.add_column('donation', 'message', pw.TextField(null=True))
-    except Exception as e:
-        print(f"[WARN] Could not re-add 'message': {e}")
-
-    # 2) Drop donation_type check (non-SQLite only)
-    try:
-        if not isinstance(migrator, SqliteMigrator):
-            migrator.sql("ALTER TABLE donation DROP CONSTRAINT donation_type_check")
-        else:
-            print("[INFO] No CHECK constraint to drop on SQLite.")
-    except Exception as e:
-        print(f"[WARN] Could not drop donation_type CHECK constraint: {e}")
-
-    # Note: restoring NOT NULL on user_id is risky if NULLs exist; skipping here.
+        migrator.add_fields('donation', message=pw.TextField(null=True))
+    except Exception:
+        pass
