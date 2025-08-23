@@ -6,7 +6,13 @@ export interface QuickDonationData {
   payment_method?: string;
   transaction_id?: string;
 }
-
+export interface LeaderboardDonor {
+  id: string;
+  name: string;
+  amount: number;
+  region?: string;
+  child_id?: string;
+}
 export interface GuestDonationData {
   child_id: string;
   amount: number;
@@ -70,14 +76,39 @@ class DonationService {
     return response.data;
   }
 
-  async getTopDonors(limit: number = 10): Promise<any[]> {
-    const response = await apiClient.get(`/donations/top/total?k=${limit}`);
-    return response.data;
+async getTopDonors(limit: number = 10): Promise<LeaderboardDonor[]> {
+  const response = await apiClient.get(`/donations/top/total?k=${limit}`);
+  const donors: LeaderboardDonor[] = response.data.map((d: any) => {
+    const id: string = d.user_id ?? d.id ?? '';
+    const name: string = d.user_name ?? 'Anonymous';
+    const amount: number = d.total_amount ?? d.amount ?? 0;
+    const child_id: string | undefined = d.child_id ?? undefined;
+    return { id, name, amount, child_id, region: undefined };
+  });
+
+  const childIds = Array.from(new Set(donors.map(d => d.child_id).filter((id): id is string => !!id)));
+  const regionMap: Record<string, string> = {};
+  for (const childId of childIds) {
+    const childResp = await apiClient.get(`/children/${childId}`);
+    regionMap[childId] = childResp.data.region_name ?? "Unknown";
   }
 
-  async getRecentDonors(childId: string, limit: number = 10): Promise<any[]> {
+  donors.forEach(d => {
+    d.region = d.child_id ? regionMap[d.child_id] ?? "Unknown" : "Unknown";
+  });
+
+  return donors;
+}
+
+
+  async getRecentDonors(childId: string, limit: number = 10): Promise<LeaderboardDonor[]> {
     const response = await apiClient.get(`/donations/recent-donors/${childId}?k=${limit}`);
-    return response.data;
+    return response.data.map((d: any) => ({
+      id: d.user_id ?? d.id,
+      name: d.user_name ?? 'Anonymous',
+      amount: d.amount,
+      region: d.region_name ?? undefined,
+    }));
   }
 }
 
