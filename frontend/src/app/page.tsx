@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       <HeroSection />
-      <FeaturedChild />
+      {/* <FeaturedChild />; */}
       <CompactImpactVisualizer />
       <ImpactCounters />
       <DonationCTA />

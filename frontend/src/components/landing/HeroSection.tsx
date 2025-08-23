@@ -1,177 +1,215 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { School, BookOpen, ChevronDown } from 'lucide-react';
+import { School, BookOpen, ChevronDown, Heart, Users, TrendingUp } from 'lucide-react';
+import HeroMediaPlayer from './HeroMediaPlayer';
+import { postService, PostResponse } from '@/services/post.service';
 
 export default function HeroSection() {
+  const [posts, setPosts] = useState<PostResponse[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        // Fetch featured or recent posts with media
+        const response = await postService.getPosts({ 
+          sort: 'recent', 
+          limit: 5 
+        });
+        
+        // Filter posts that have media (video or image)
+        const postsWithMedia = response.items.filter(
+          post => post.video_link || post.youtube_url || (post.media_urls && post.media_urls.length > 0)
+        );
+        
+        setPosts(postsWithMedia);
+      } catch (error) {
+        console.error('Failed to fetch posts:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
   return (
-    <section className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-blue-50 via-indigo-50 to-white -mt-20">
+    <section className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 -mt-20">
+      {/* Subtle Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 2px 2px, rgb(99, 102, 241) 1px, transparent 1px)`,
+          backgroundSize: '40px 40px'
+        }} />
+      </div>
+
       {/* Decorative Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-40 right-32 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-32 left-1/3 w-64 h-64 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-20 left-20 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
       </div>
 
-      {/* Scattered Images - Full Color and Prominent */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        {/* Top left image - Mobile: medium, Desktop: extra large */}
-        <div
-          className="absolute top-24 left-2 sm:top-28 sm:left-4 md:top-36 md:left-8 lg:left-12 
-                        w-32 h-32 sm:w-44 sm:h-44 md:w-56 md:h-56 lg:w-64 lg:h-64 xl:w-72 xl:h-72
-                        transform rotate-3 hover:rotate-0 transition-transform duration-300
-                        shadow-xl rounded-2xl overflow-hidden"
-        >
-          <img
-            src="https://www.cityu.edu.hk/class/media_events/magazine/img/issue9/photo/feature/1_2.jpg"
-            alt="Happy student"
-            className="w-full h-full object-cover"
-          />
-        </div>
+      {/* Main Content Container */}
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 min-h-screen">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[calc(100vh-12rem)]">
+          
+          {/* Left Side - Text Content */}
+          <div className="flex flex-col justify-center">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-6 w-fit">
+              <Heart className="w-4 h-4" fill="currentColor" />
+              <span>Building Brighter Futures Together</span>
+            </div>
 
-        {/* Top right image - Mobile: medium, Desktop: large */}
-        <div
-          className="absolute top-40 right-2 sm:top-44 sm:right-4 md:top-52 md:right-8 lg:right-16 
-                        w-28 h-28 sm:w-36 sm:h-36 md:w-48 md:h-48 lg:w-56 lg:h-56 xl:w-64 xl:h-64
-                        transform -rotate-6 hover:rotate-0 transition-transform duration-300
-                        shadow-xl rounded-xl overflow-hidden"
-        >
-          <div className="flex items-center justify-center h-full bg-gradient-to-br from-purple-100 to-purple-200">
-            <img
-              src="https://www.hkspc.org/cache/img/2fef3b426160de7e3d75dabee6fcdd40.jpg"
-              alt="Happy student"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-
-        {/* Bottom left image - Hidden on mobile, visible on tablet+ */}
-        <div
-          className="hidden sm:block absolute bottom-32 left-4 md:bottom-40 md:left-8 lg:bottom-48 lg:left-16 
-                        w-36 h-36 md:w-44 md:h-44 lg:w-52 lg:h-52 xl:w-60 xl:h-60
-                        transform rotate-12 hover:rotate-0 transition-transform duration-300
-                        shadow-xl rounded-2xl overflow-hidden"
-        >
-          <div className="flex items-center justify-center h-full bg-gradient-to-br from-pink-100 to-pink-200">
-            <img
-              src="https://www.news.gov.hk/eng/2023/08/20230804/20230804_143226_831/images/20230804161803128.JPG"
-              alt="Happy student"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-
-        {/* Bottom right image - Mobile: medium, Desktop: extra large */}
-        <div
-          className="absolute bottom-32 right-2 sm:bottom-36 sm:right-8 md:bottom-44 md:right-12 lg:right-20 
-                        w-32 h-32 sm:w-40 sm:h-40 md:w-52 md:h-52 lg:w-64 lg:h-64 xl:w-72 xl:h-72
-                        transform -rotate-3 hover:rotate-0 transition-transform duration-300
-                        shadow-xl rounded-xl overflow-hidden"
-        >
-          <div className="flex items-center justify-center h-full bg-gradient-to-br from-indigo-100 to-indigo-200">
-            <img
-              src="https://media.cnn.com/api/v1/images/stellar/prod/131030204906-hk-kids.jpg?q=x_0,y_221,h_2394,w_4256,c_crop/h_833,w_1480"
-              alt="Happy student"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-
-        {/* Additional decorative image - Desktop only */}
-        <div
-          className="hidden lg:block absolute top-48 right-1/3 
-                        w-44 h-44 xl:w-52 xl:h-52
-                        transform rotate-[-8deg] hover:rotate-0 transition-transform duration-300
-                        shadow-lg rounded-full overflow-hidden"
-        >
-          <div className="flex items-center justify-center h-full bg-gradient-to-br from-yellow-100 to-orange-100">
-            <img
-              src="https://www.heiferhk.org/wp-content/uploads/2019/02/readtofeed_individual_member-600x400-optimized.jpg"
-              alt="Happy student"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 flex flex-col justify-center items-center min-h-screen px-4 sm:px-6 lg:px-8 pt-32 pb-20">
-        <div className="text-center max-w-4xl mx-auto">
-          {/* Main Title */}
-          <div className="mb-8">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in">
+            {/* Main Title */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+              <span className="text-gray-900">See the </span>
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Empowering
+                Real Impact
               </span>
               <br />
-              <span className="text-gray-800">K-3 Education</span>
+              <span className="text-gray-900">of Your Kindness</span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-600 font-light max-w-2xl mx-auto leading-relaxed">
-              Transforming early education for Hong Kong's youngest learners
-              through innovative learning experiences
+
+            {/* Description */}
+            <p className="text-lg sm:text-xl text-gray-600 mb-8 leading-relaxed">
+              Every donation transforms a child's life. Watch their journey unfold through real stories, updates, and moments of joy from the children you support.
             </p>
+
+            {/* Feature Points */}
+            <div className="space-y-3 mb-8">
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                  <span className="text-white text-xs">✓</span>
+                </div>
+                <span className="text-gray-700">Direct updates from the children you help</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                  <span className="text-white text-xs">✓</span>
+                </div>
+                <span className="text-gray-700">Track your impact with transparent reporting</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                  <span className="text-white text-xs">✓</span>
+                </div>
+                <span className="text-gray-700">Join a community of caring donors</span>
+              </div>
+            </div>
+
+            {/* Call to Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <Link href="/children">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all"
+                >
+                  <Heart className="mr-2 h-5 w-5" />
+                  Start Supporting Today
+                </Button>
+              </Link>
+
+              <Link href="/posts">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-300 px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                >
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  See Their Stories
+                </Button>
+              </Link>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-6">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Users className="w-4 h-4 text-blue-600" />
+                  <span className="text-2xl font-bold text-gray-900">500+</span>
+                </div>
+                <span className="text-sm text-gray-600">Children Supported</span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <School className="w-4 h-4 text-purple-600" />
+                  <span className="text-2xl font-bold text-gray-900">50+</span>
+                </div>
+                <span className="text-sm text-gray-600">Partner Schools</span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <TrendingUp className="w-4 h-4 text-green-600" />
+                  <span className="text-2xl font-bold text-gray-900">98%</span>
+                </div>
+                <span className="text-sm text-gray-600">Graduation Rate</span>
+              </div>
+            </div>
           </div>
 
-          {/* Simple Mission Statement */}
-          <div className="mb-12 max-w-2xl mx-auto">
-            <p className="text-lg text-gray-700 leading-relaxed">
-              We believe every child deserves access to quality early education.
-              Join us in creating brighter futures for K-3 students across Hong
-              Kong.
-            </p>
-          </div>
+          {/* Right Side - TikTok-style Media Player */}
+          <div className="relative lg:h-[700px] h-[550px] flex items-center justify-center">
+            {/* Phone Frame */}
+            <div className="relative w-full max-w-[420px] h-full">
+              {/* Phone Border */}
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[3rem] shadow-2xl"></div>
+              
+              {/* Phone Screen */}
+              <div className="absolute inset-[3px] bg-black rounded-[2.8rem] overflow-hidden">
+                {/* Status Bar */}
+                <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-black/50 to-transparent z-20 flex items-center justify-center">
+                  <div className="w-20 h-1 bg-white/30 rounded-full"></div>
+                </div>
+                
+                {/* Media Player */}
+                <div className="w-full h-full">
+                  {!isLoading && posts.length > 0 ? (
+                    <HeroMediaPlayer posts={posts} />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
+                      {isLoading ? (
+                        <div className="animate-pulse">
+                          <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+                        </div>
+                      ) : (
+                        <p className="text-white/60 text-center px-8">
+                          No stories available yet.
+                          <br />
+                          <span className="text-sm">Check back soon!</span>
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
 
-          {/* Call to Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Link href="/children">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-10 py-6 text-lg font-semibold rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all"
-              >
-                <BookOpen className="mr-2 h-5 w-5" />
-                Support a Student
-              </Button>
-            </Link>
+                {/* Bottom App UI Hint */}
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 to-transparent pointer-events-none"></div>
+              </div>
 
-            <Link href="/schools">
-              <Button
-                size="lg"
-                variant="outline"
-                className="bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-200 px-10 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
-              >
-                <School className="mr-2 h-5 w-5" />
-                Learn More
-              </Button>
-            </Link>
-          </div>
+              {/* Decorative Elements */}
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-purple-500 rounded-full opacity-20 blur-2xl"></div>
+              <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-blue-500 rounded-full opacity-20 blur-2xl"></div>
+            </div>
 
-          {/* Trust Indicators */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-full px-8 py-4 inline-flex items-center justify-center gap-6 shadow-lg">
-            <span className="flex items-center gap-2 text-sm text-gray-700">
-              <span className="text-green-500 text-lg">✓</span>
-              <span className="font-medium">100% Transparent</span>
-            </span>
-            <span className="flex items-center gap-2 text-sm text-gray-700">
-              <span className="text-green-500 text-lg">✓</span>
-              <span className="font-medium">Registered Charity</span>
-            </span>
-            <span className="flex items-center gap-2 text-sm text-gray-700">
-              <span className="text-green-500 text-lg">✓</span>
-              <span className="font-medium">Tax Deductible</span>
-            </span>
+            {/* Click Hint */}
+            {posts.length > 0 && (
+              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-center">
+                <p className="text-sm text-gray-600 font-medium">
+                  Click to explore all stories →
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Scroll Indicator - Encouraging to see Featured Child */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+      {/* Scroll Indicator */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce lg:hidden">
         <div className="flex flex-col items-center gap-2">
-          <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg">
-            <span className="text-sm text-gray-700 font-medium">
-              Meet the children you can help
-            </span>
-          </div>
           <ChevronDown className="w-6 h-6 text-gray-600 animate-pulse" />
         </div>
       </div>
