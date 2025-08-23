@@ -15,6 +15,7 @@ from apps.webui.routers import (
     posts,
     regions,
     followers,
+    donations,
 )
 
 from config import (
@@ -91,6 +92,7 @@ app.include_router(classrooms.router, tags=["classrooms"])
 app.include_router(posts.router, prefix="/posts", tags=["posts"])
 app.include_router(regions.router, prefix="/regions", tags=["regions"])
 app.include_router(followers.router, prefix="/followers", tags=["followers"])
+app.include_router(donations.router, prefix="/donations", tags=["donations"])
 
 
 @app.get("/")
