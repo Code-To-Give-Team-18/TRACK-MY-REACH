@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { StripePaymentForm } from '@/components/checkout/StripePaymentForm';
 import { HongKongMapOverhead } from '@/components/three/HongKongMapOverhead';
 import { RegionSelector } from '@/components/checkout/RegionSelector';
@@ -29,9 +30,32 @@ const regions = [
 ];
 
 export default function CheckoutPage() {
+  const searchParams = useSearchParams();
+  
+  // Get parameters from URL
+  const childId = searchParams.get('childId');
+  const region = searchParams.get('region');
+  const amount = searchParams.get('amount');
+  
   const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [selectedStudent, setSelectedStudent] = useState<string>('let-us-choose');
   const [donationAmount, setDonationAmount] = useState<number>(100);
+  
+  // Set initial values from URL parameters
+  useEffect(() => {
+    if (childId) {
+      setSelectedStudent(childId);
+    }
+    if (region) {
+      setSelectedRegion(region);
+    }
+    if (amount) {
+      const parsedAmount = parseInt(amount);
+      if (!isNaN(parsedAmount) && parsedAmount > 0) {
+        setDonationAmount(parsedAmount);
+      }
+    }
+  }, [childId, region, amount]);
 
   const handlePaymentSuccess = () => {
     // Handle successful payment
