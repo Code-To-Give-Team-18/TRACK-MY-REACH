@@ -6,7 +6,7 @@ import { CheckoutFlow } from '@/components/checkout/CheckoutFlow';
 import { HongKongMapOverhead } from '@/components/three/HongKongMapOverhead';
 import { RegionSelector } from '@/components/checkout/RegionSelector';
 import { StudentSelector } from '@/components/checkout/StudentSelector';
-import { Heart, Sparkles, TrendingUp } from 'lucide-react';
+import { Heart, Sparkles, TrendingUp, Loader2 } from 'lucide-react';
 import { DonationMode } from '@/components/checkout/DonationModeSelector';
 
 const regions = [
@@ -30,7 +30,7 @@ const regions = [
   { id: 'yuen-long', name: 'Yuen Long', coordinates: [114.0324, 22.4456] as [number, number] },
 ];
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams();
   
   // Get parameters from URL
@@ -74,8 +74,20 @@ export default function CheckoutPage() {
 
       {/* Main Content */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left: Payment Form */}
+        {/* Quick Donation Header */}
+        {mode === 'quick' && (
+          <div className="max-w-2xl mx-auto mb-8 text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-3">
+              Make a Quick Impact
+            </h1>
+            <p className="text-lg text-gray-600">
+              Your donation will be distributed to children who need it most across all regions
+            </p>
+          </div>
+        )}
+        
+        <div className={mode === 'quick' ? 'max-w-2xl mx-auto' : 'grid grid-cols-1 lg:grid-cols-2 gap-8'}>
+          {/* Left: Payment Form (or Center when quick mode) */}
           <div className="space-y-6">
             {/* Payment Form */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8 hover:shadow-2xl transition-shadow">
@@ -206,5 +218,20 @@ export default function CheckoutPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+          <span className="text-gray-600">Loading checkout...</span>
+        </div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }
