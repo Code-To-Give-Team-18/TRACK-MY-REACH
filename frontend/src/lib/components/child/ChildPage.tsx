@@ -1,14 +1,16 @@
 "use client"
 
 import Image from "next/image"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation"
 import { ChildInfo } from "./components/ChildInfo";
-import { Child } from "./shared/types/Child";
-import { useChild } from "./hooks/useChild";
 import { ChildProvider } from "./contexts/ChildContext";
+import { useState } from "react";
+import { Post } from "../stories/components/PostCard";
 
 const Posts = () => {
+  const [posts, setPosts] = useState<Post[]>([]);
+  if (posts.length === 0) return <div>No posts</div>
+
   return (
     <div>
       TODO: Post feed
