@@ -73,6 +73,9 @@ duckduckgo-search>=6.1.7
 faster-whisper>=1.0.2
 youtube-transcript-api>=0.6.2
 pytube>=15.0.0
+google-api-python-client>=2.108.0
+google-auth-httplib2>=0.2.0
+google-auth-oauthlib>=1.2.0
 
 # Image processing (might need special handling for Python 3.13)
 # opencv-python-headless>=4.9.0.80

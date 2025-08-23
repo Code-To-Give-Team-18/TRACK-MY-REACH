@@ -1,14 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from typing import List, Optional
 from enum import Enum
 from pydantic import BaseModel
+import os
+import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 from apps.webui.models.posts import Posts
 from apps.webui.models.posts_schemas import PostCreateRequest, PostUpdateRequest, PostResponse
 from utils.utils import get_current_user
 import apps.webui.models.followers as followers_models
 from peewee import fn
+
+logger = logging.getLogger(__name__)
 router = APIRouter()
+executor = ThreadPoolExecutor(max_workers=2)
 
 class SortOrder(str, Enum):
     recent = "recent"
@@ -24,7 +31,11 @@ class PaginatedPosts(BaseModel):
 # Create Post 
 ############################
 @router.post("/", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
-async def create_post(form_data: PostCreateRequest, user=Depends(get_current_user)):
+async def create_post(
+    form_data: PostCreateRequest, 
+    background_tasks: BackgroundTasks,
+    user=Depends(get_current_user)
+):
     try:
         media_urls = []
         if form_data.picture_link:
@@ -44,6 +55,16 @@ async def create_post(form_data: PostCreateRequest, user=Depends(get_current_use
         )
 
         if post:
+            # Schedule YouTube upload in background if enabled
+            if os.getenv('YOUTUBE_AUTO_UPLOAD', 'false').lower() == 'true':
+                background_tasks.add_task(
+                    upload_post_to_youtube,
+                    post_id=post['id'],
+                    child_id=form_data.child_id,
+                    caption=form_data.caption,
+                    video_link=form_data.video_link,
+                    picture_link=form_data.picture_link
+                )
             return post
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create post")
     except Exception as e:
@@ -292,3 +313,166 @@ async def get_posts(
 
     except Exception as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error retrieving posts: {str(e)}")
+
+############################
+# YouTube Integration
+############################
+def upload_post_to_youtube_sync(
+    post_id: str,
+    child_id: str,
+    caption: str,
+    video_link: Optional[str],
+    picture_link: Optional[str]
+):
+    """Synchronous function to upload post content to YouTube"""
+    logger.info(f"Starting YouTube upload for post {post_id}")
+    try:
+        from apps.webui.services.youtube_service import YouTubeService
+        from apps.webui.models.children import Children
+        import tempfile
+        import requests
+        
+        logger.info(f"Initializing YouTube service...")
+        # Initialize YouTube service
+        youtube_service = YouTubeService()
+        logger.info(f"YouTube service initialized successfully")
+        
+        # Get child information
+        child = Children.get_child_by_id(child_id)
+        if not child:
+            logger.error(f"Child not found: {child_id}")
+            return
+        
+        child_name = child.get('name', 'Unknown')
+        
+        # Only process if there's a video
+        if video_link:
+            logger.info(f"Processing video link: {video_link}")
+            # Download video to temp file
+            if video_link.startswith('/api/'):
+                # Internal video - construct full URL
+                base_url = os.getenv('WEBUI_URL', 'http://localhost:8080')
+                video_url = f"{base_url}{video_link}"
+            else:
+                # External video URL
+                video_url = video_link
+            
+            logger.info(f"Downloading video from: {video_url}")
+            try:
+                # Download video
+                response = requests.get(video_url, stream=True)
+                response.raise_for_status()
+                logger.info(f"Video download started...")
+                
+                with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as tmp_video:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        tmp_video.write(chunk)
+                    video_path = tmp_video.name
+                
+                # Download thumbnail if available
+                thumbnail_path = None
+                if picture_link:
+                    if picture_link.startswith('/api/'):
+                        picture_url = f"{base_url}{picture_link}"
+                    else:
+                        picture_url = picture_link
+                    
+                    try:
+                        thumb_response = requests.get(picture_url)
+                        thumb_response.raise_for_status()
+                        
+                        with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_thumb:
+                            tmp_thumb.write(thumb_response.content)
+                            thumbnail_path = tmp_thumb.name
+                    except Exception as e:
+                        logger.warning(f"Failed to download thumbnail: {e}")
+                
+                # Upload to YouTube
+                logger.info(f"Starting YouTube upload for video: {video_path}")
+                result = youtube_service.upload_video(
+                    video_path=video_path,
+                    title=f"{child_name}'s Update - Project Reach",
+                    description=caption or f"Latest update from {child_name}",
+                    tags=['charity', 'education', 'children', 'ProjectReach', child_name],
+                    thumbnail_path=thumbnail_path,
+                    child_name=child_name,
+                    post_id=post_id
+                )
+                logger.info(f"YouTube upload result: {result}")
+                
+                if result['success']:
+                    # Update post with YouTube URL
+                    Posts.update_post(
+                        post_id,
+                        youtube_url=result['url']
+                    )
+                    logger.info(f"Post {post_id} uploaded to YouTube: {result['url']}")
+                else:
+                    logger.error(f"YouTube upload failed for post {post_id}: {result.get('error')}")
+                
+                # Clean up temp files
+                os.unlink(video_path)
+                if thumbnail_path:
+                    os.unlink(thumbnail_path)
+                    
+            except Exception as e:
+                logger.error(f"Error processing video for YouTube: {e}")
+        
+    except Exception as e:
+        logger.error(f"YouTube upload task failed: {e}")
+
+async def upload_post_to_youtube(
+    post_id: str,
+    child_id: str,
+    caption: str,
+    video_link: Optional[str],
+    picture_link: Optional[str]
+):
+    """Async wrapper that runs YouTube upload in thread pool"""
+    loop = asyncio.get_event_loop()
+    try:
+        # Run the sync function in a thread pool to avoid blocking
+        await loop.run_in_executor(
+            executor,
+            upload_post_to_youtube_sync,
+            post_id,
+            child_id,
+            caption,
+            video_link,
+            picture_link
+        )
+    except Exception as e:
+        logger.error(f"Failed to schedule YouTube upload: {e}")
+
+@router.post("/{post_id}/youtube", response_model=dict)
+async def upload_to_youtube(
+    post_id: str,
+    background_tasks: BackgroundTasks,
+    user=Depends(get_current_user)
+):
+    """Manually trigger YouTube upload for a post"""
+    try:
+        # Check if user has permission
+        post = Posts.get_post_by_id(post_id)
+        if not post:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Post not found")
+        
+        if post.get('author_id') != user.id and user.role != 'admin':
+            raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Not authorized")
+        
+        # Schedule upload
+        background_tasks.add_task(
+            upload_post_to_youtube,
+            post_id=post_id,
+            child_id=post.get('child_id'),
+            caption=post.get('caption'),
+            video_link=post.get('video_link'),
+            picture_link=post.get('media_urls')[0] if post.get('media_urls') else None
+        )
+        
+        return {"message": "YouTube upload scheduled", "post_id": post_id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))

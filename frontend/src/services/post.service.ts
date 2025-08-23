@@ -19,6 +19,7 @@ export interface PostResponse {
   post_type: string;
   media_urls?: string[];
   video_link?: string;
+  youtube_url?: string;
   likes: number;
   comments_count: number;
   is_published: boolean;
@@ -93,6 +94,12 @@ export const postService = {
     userId?: string;
   }): Promise<PaginatedPosts> {
     const response = await apiClient.get('/posts', { params });
+    return response.data;
+  },
+
+  // Upload post to YouTube
+  async uploadToYouTube(postId: string): Promise<{ message: string; post_id: string }> {
+    const response = await apiClient.post(`/posts/${postId}/youtube`);
     return response.data;
   },
 };

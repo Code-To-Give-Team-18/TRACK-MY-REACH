@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, Save, Trash2, Image as ImageIcon, Video, 
-  Upload, X, Calendar, User, Eye, Edit3, AlertCircle, Expand, ChevronLeft, ChevronRight
+  Upload, X, Calendar, User, Eye, Edit3, AlertCircle, Expand, ChevronLeft, ChevronRight, Youtube
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { postService, type PostResponse, type CreatePostData } from '@/services/post.service';
@@ -12,6 +12,7 @@ import { fileService } from '@/services/file.service';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import YouTubeUploadButton from '@/components/posts/YouTubeUploadButton';
 
 const postTypes = [
   { value: 'update', label: 'Update' },
@@ -355,6 +356,11 @@ export default function PostDetailPage() {
             
             {!isEditing && (
               <div className="flex gap-3">
+                <YouTubeUploadButton 
+                  postId={post.id}
+                  hasVideo={!!post.video_link}
+                  youtubeUrl={post.youtube_url}
+                />
                 <button
                   onClick={() => setIsEditing(true)}
                   className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full transition-colors"
@@ -760,6 +766,29 @@ export default function PostDetailPage() {
                           className="w-full rounded-xl"
                         />
                       )}
+                    </div>
+                  )}
+
+                  {/* YouTube Link */}
+                  {post.youtube_url && (
+                    <div className="mt-6 p-4 bg-red-50 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Youtube className="w-6 h-6 text-red-600" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">This post is on YouTube!</p>
+                            <p className="text-xs text-gray-600">Shared for maximum donor reach</p>
+                          </div>
+                        </div>
+                        <a 
+                          href={post.youtube_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-red-600 hover:text-red-700 text-sm font-medium underline"
+                        >
+                          Watch on YouTube →
+                        </a>
+                      </div>
                     </div>
                   )}
 

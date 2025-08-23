@@ -310,3 +310,5 @@ dist
 !readme.md
 !setup_guide.md
 temp_shawn
+backend/youtube_token.pickle
+backend/youtube_credentials.json
