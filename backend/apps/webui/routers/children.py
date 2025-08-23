@@ -138,3 +138,46 @@ def create_child(body: ChildCreate, user=Depends(get_verified_user)):
     )
     return created
 
+
+############################
+# Update child
+############################
+class ChildUpdate(BaseModel):
+    region_id: Optional[str] = None
+    name: Optional[str] = None
+    age: Optional[int] = None
+    school: Optional[str] = None
+    grade: Optional[str] = None
+    description: Optional[str] = None
+    bio: Optional[str] = None
+    video_link: Optional[str] = None
+    picture_link: Optional[str] = None
+
+@router.put("/{child_id}")
+def update_child(child_id: str, body: ChildUpdate, user=Depends(get_verified_user)):
+    child = Children.get_child_by_id(child_id)
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
+    
+    update_data = body.dict(exclude_unset=True)
+    
+    if update_data.get("region_id"):
+        if not Region.get_or_none(Region.id == update_data["region_id"]):
+            raise HTTPException(status_code=404, detail="Region not found")
+    
+    updated = Children.update_child(child_id, **update_data)
+    return updated
+
+
+############################
+# Delete child
+############################
+@router.delete("/{child_id}")
+def delete_child(child_id: str, user=Depends(get_admin_user)):
+    child = Children.get_child_by_id(child_id)
+    if not child:
+        raise HTTPException(status_code=404, detail="Child not found")
+    
+    Children.delete_child_by_id(child_id)
+    return {"message": "Child deleted successfully"}
+

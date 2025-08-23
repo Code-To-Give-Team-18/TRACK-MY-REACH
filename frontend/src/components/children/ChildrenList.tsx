@@ -7,9 +7,11 @@ import ChildCard, { type Child } from './ChildCard';
 interface ChildrenListProps {
   children: Child[];
   regions: Region[];
+  onEdit?: (child: Child) => void;
+  onDelete?: (childId: string) => void;
 }
 
-export default function ChildrenList({ children, regions }: ChildrenListProps) {
+export default function ChildrenList({ children, regions, onEdit, onDelete }: ChildrenListProps) {
   return (
     <div className="bg-white rounded-2xl shadow-xl p-8">
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">
@@ -29,7 +31,9 @@ export default function ChildrenList({ children, regions }: ChildrenListProps) {
               <ChildCard 
                 key={child.id} 
                 child={child} 
-                region={region} 
+                region={region}
+                onEdit={onEdit}
+                onDelete={onDelete}
               />
             );
           })}

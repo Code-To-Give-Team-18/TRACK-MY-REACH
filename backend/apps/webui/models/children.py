@@ -188,6 +188,14 @@ class ChildrenTable:
         
         return child_dict
 
+    def delete_child_by_id(self, child_id: str) -> bool:
+        """Delete a child by ID"""
+        child = Child.get_or_none(Child.id == child_id)
+        if not child:
+            return False
+        child.delete_instance()
+        return True
+
     def _child_to_dict(self, child) -> dict:
         if not child:
             return None

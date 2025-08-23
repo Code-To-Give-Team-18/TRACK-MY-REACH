@@ -26,6 +26,18 @@ export interface CreateChildData {
   picture_link?: string;
 }
 
+export interface UpdateChildData {
+  region_id?: string;
+  name?: string;
+  age?: number;
+  school?: string;
+  grade?: string;
+  description?: string;
+  bio?: string;
+  video_link?: string;
+  picture_link?: string;
+}
+
 
 export interface ChildResponse {
   id: string;
@@ -77,6 +89,11 @@ export const childrenService = {
 
   async getChild(childId: string): Promise<ChildResponse> {
     const response = await apiClient.get(`/children/${childId}`);
+    return response.data;
+  },
+
+  async updateChild(childId: string, data: UpdateChildData): Promise<Child> {
+    const response = await apiClient.put(`/children/${childId}`, data);
     return response.data;
   },
 

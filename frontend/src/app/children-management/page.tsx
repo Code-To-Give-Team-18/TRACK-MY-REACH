@@ -7,6 +7,7 @@ import { childrenService } from '@/services/children.service';
 import { regionsService, type Region } from '@/services/regions.service';
 import ChildForm from '@/components/children/ChildForm';
 import ChildrenList from '@/components/children/ChildrenList';
+import EditChildModal from '@/components/children/EditChildModal';
 import { type Child } from '@/components/children/ChildCard';
 
 export default function ChildrenManagementPage() {
@@ -14,6 +15,7 @@ export default function ChildrenManagementPage() {
   const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingChild, setEditingChild] = useState<Child | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -43,6 +45,23 @@ export default function ChildrenManagementPage() {
 
   const handleFormCancel = () => {
     setShowForm(false);
+  };
+
+  const handleEdit = (child: Child) => {
+    setEditingChild(child);
+  };
+
+  const handleDelete = (childId: string) => {
+    setChildren(children.filter(c => c.id !== childId));
+  };
+
+  const handleEditSuccess = async () => {
+    setEditingChild(null);
+    await fetchData();
+  };
+
+  const handleEditClose = () => {
+    setEditingChild(null);
   };
 
   if (loading) {
@@ -91,8 +110,20 @@ export default function ChildrenManagementPage() {
 
           <ChildrenList 
             children={children} 
-            regions={regions} 
+            regions={regions}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
+
+          {editingChild && (
+            <EditChildModal
+              child={editingChild}
+              regions={regions}
+              isOpen={!!editingChild}
+              onClose={handleEditClose}
+              onSuccess={handleEditSuccess}
+            />
+          )}
         </motion.div>
       </div>
     </div>
