@@ -82,24 +82,6 @@ class StandardDonationIn(BaseModel):
     transaction_id: Optional[str] = None
     referral_code: str = None
 
-class DonationOut(BaseModel):
-    id: str
-    user_id: Optional[str] = None
-    user_name: Optional[str] = None
-    child_id: Optional[str] = None
-    child_name: Optional[str] = None
-    region_id: Optional[str] = None
-    region_name: Optional[str] = None
-    amount: float
-    currency: str
-    donation_type: str
-    is_anonymous: bool
-    referral_code: Optional[str] = None
-    transaction_id: Optional[str] = None
-    payment_method: Optional[str] = None
-    status: str
-    created_at: Optional[str] = None
-
 class TopDonorOut(BaseModel):
     user_id: str
     user_name: Optional[str] = None
@@ -379,7 +361,7 @@ def donate_to_all(body: BulkDonateIn):
 
         donation_type = "Standard" if body.user_id else "Guest"
 
-        created: List[DonationOut] = []
+        created: List[dict] = []
         for cid in body.child_ids:
             d = Donations.create_donation(
                 donation_type=donation_type,
@@ -390,7 +372,7 @@ def donate_to_all(body: BulkDonateIn):
                 payment_method=body.payment_method,
                 transaction_id=body.transaction_id,
             )
-            created.append(DonationOut(**d))
+            created.append(d)
 
         return BulkDonateOut(
             per_child_amount=float(per),
