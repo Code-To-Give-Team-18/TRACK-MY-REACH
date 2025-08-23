@@ -2,6 +2,7 @@ from peewee import *
 from playhouse.shortcuts import model_to_dict
 from datetime import datetime, timedelta, date
 import uuid
+from decimal import Decimal, InvalidOperation 
 
 from apps.webui.internal.db import DB
 from apps.webui.models.users import User
@@ -11,17 +12,19 @@ from apps.webui.models.regions import Region
 
 class Donation(Model):
     id = CharField(max_length=255, unique=True, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user = ForeignKeyField(User, backref='donations', on_delete='CASCADE', null=True) #for quick donate
+    user = ForeignKeyField(User, backref='donations', on_delete='CASCADE', null=True)  # for quick donate
     child = ForeignKeyField(Child, backref='donations', on_delete='CASCADE', null=True)
     region = ForeignKeyField(Region, backref='donations', on_delete='CASCADE', null=True)
     amount = DecimalField(max_digits=15, decimal_places=2)
     currency = CharField(max_length=3, default='HKD')
+
 
     donation_type = CharField(
         max_length=20,
         default='Standard',
         constraints=[Check("donation_type IN ('Quick','Guest','Standard')")]
     )
+
 
     is_anonymous = BooleanField(default=False)
     referral_code = CharField(max_length=20, null=True)  # Ignored for Guest/Quick
@@ -30,8 +33,10 @@ class Donation(Model):
     status = CharField(max_length=50, default='completed')  # pending, completed, failed
     created_at = DateTimeField(default=datetime.now)
 
+
     class Meta:
         database = DB
+
 
 
 class DonationSummary(Model):
@@ -39,10 +44,11 @@ class DonationSummary(Model):
     region = ForeignKeyField(Region, backref='donation_summaries', on_delete='CASCADE')
     period = CharField(max_length=20)  # 'daily', 'weekly', 'monthly', 'yearly', 'all_time'
     period_date = DateField()
-    total_amount = DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    total_amount = DecimalField(max_digits=15, decimal_places=2, default=Decimal("0.00"))
     donation_count = IntegerField(default=0)
     unique_donors = IntegerField(default=0)
     updated_at = DateTimeField(default=datetime.now)
+
 
     class Meta:
         database = DB
@@ -51,10 +57,12 @@ class DonationSummary(Model):
         )
 
 
+
 class DonationsTable:
     def __init__(self, db):
         self.db = db
         db.create_tables([Donation, DonationSummary], safe=True)
+
 
     def create_donation(
         self,
@@ -81,10 +89,12 @@ class DonationsTable:
         from apps.webui.models.regions import Regions
         from apps.webui.models.users import Users
 
+
         # Normalize donation_type
         donation_type = (donation_type or 'Standard').title()
         if donation_type not in ('Quick', 'Guest', 'Standard'):
             raise ValueError("donation_type must be one of: Quick, Guest, Standard")
+
 
         # Validate & normalize inputs based on type
         if donation_type == 'Quick':
@@ -94,6 +104,7 @@ class DonationsTable:
             child_id = None
             is_anonymous = True
             referral_code = None
+
 
         elif donation_type == 'Guest':
             if not child_id or amount is None:
@@ -107,24 +118,32 @@ class DonationsTable:
             is_anonymous = True
             referral_code = None
 
+
         else:  # Standard
             if not user_id or not child_id or amount is None:
                 raise ValueError("Standard donation requires 'user_id', 'child_id', and 'amount'")
             is_anonymous = False
 
-        # Derive region from child if child present (kept since you still track region totals)
+
         if child_id:
             child = Children.get_child_by_id(child_id)
             if not child:
                 raise ValueError("Child not found")
             region_id = child.get('region_id')
 
+
+        try:
+            amount = Decimal(str(amount)) if amount is not None else None
+        except (InvalidOperation, TypeError):
+            raise ValueError("Invalid amount")
+
+
         # Create donation
         donation = Donation.create(
             user=user_id,
             child=child_id,
             region=region_id,
-            amount=amount,
+            amount=amount,  # Decimal now
             currency=currency,
             donation_type=donation_type,
             is_anonymous=is_anonymous,
@@ -134,15 +153,14 @@ class DonationsTable:
             status='completed',
         )
 
+
         # Side effects
         if child_id:
             Children.update_donation_received(child_id, amount)
 
-        if region_id:
-            Regions.update_region_donation_total(region_id, amount)
-            self._update_donation_summary(region_id, amount)
 
         return self._donation_to_dict(donation)
+
 
     def get_donations_by_user(self, user_id: str) -> list:
         return [
@@ -152,6 +170,7 @@ class DonationsTable:
             .order_by(Donation.created_at.desc())
         ]
 
+
     def get_donations_by_child(self, child_id: str) -> list:
         return [
             self._donation_to_dict(d)
@@ -160,6 +179,7 @@ class DonationsTable:
             .order_by(Donation.created_at.desc())
         ]
 
+
     def get_donations_by_region(self, region_id: str) -> list:
         return [
             self._donation_to_dict(d)
@@ -167,6 +187,7 @@ class DonationsTable:
             .where(Donation.region == region_id)
             .order_by(Donation.created_at.desc())
         ]
+
 
     def get_recent_donations(self, limit: int = 10) -> list:
         return [
@@ -179,6 +200,7 @@ class DonationsTable:
             )
         ]
 
+
     def get_top_donors(self, limit: int = 10, period_days: int = None) -> list:
         q = Donation.select(
             Donation.user,
@@ -186,15 +208,17 @@ class DonationsTable:
             fn.COUNT(Donation.id).alias('donation_count'),
         ).where(Donation.status == 'completed')
 
+
         if period_days:
             start_dt = datetime.now() - timedelta(days=period_days)
             q = q.where(Donation.created_at >= start_dt)
 
+
         q = q.group_by(Donation.user).order_by(fn.SUM(Donation.amount).desc()).limit(limit)
+
 
         results = []
         for row in q:
-            # row.user can be None (Quick/Guest without sentinel). Skip or show as Anonymous aggregate.
             if row.user is None:
                 results.append({
                     'user': {
@@ -220,6 +244,7 @@ class DonationsTable:
                 })
         return results
 
+
     def get_donation_stats(self, region_id: str = None, child_id: str = None) -> dict:
         q = Donation.select(
             fn.SUM(Donation.amount).alias('total_amount'),
@@ -227,10 +252,12 @@ class DonationsTable:
             fn.COUNT(fn.DISTINCT(Donation.user)).alias('unique_donors'),
         ).where(Donation.status == 'completed')
 
+
         if region_id:
             q = q.where(Donation.region == region_id)
         if child_id:
             q = q.where(Donation.child == child_id)
+
 
         r = q.get()
         return {
@@ -239,7 +266,8 @@ class DonationsTable:
             'unique_donors': r.unique_donors or 0,
         }
 
-    def _update_donation_summary(self, region_id: str, amount: float):
+
+    def _update_donation_summary(self, region_id: str, amount: Decimal):
         today = date.today()
         periods = [
             ('daily', today),
@@ -249,16 +277,24 @@ class DonationsTable:
             ('all_time', date(2000, 1, 1)),
         ]
 
+
         for period, period_date in periods:
             summary, _ = DonationSummary.get_or_create(
                 region=region_id,
                 period=period,
                 period_date=period_date,
-                defaults={'total_amount': 0, 'donation_count': 0, 'unique_donors': 0},
+                defaults={'total_amount': Decimal("0.00"), 'donation_count': 0, 'unique_donors': 0},
             )
 
-            summary.total_amount += amount
-            summary.donation_count += 1
+
+            current_total = summary.total_amount
+            if not isinstance(current_total, Decimal):
+                current_total = Decimal(str(current_total or "0.00"))
+            summary.total_amount = current_total + amount
+
+
+            summary.donation_count = (summary.donation_count or 0) + 1
+
 
             # recompute unique donors in the window (using >= period start)
             start_dt = datetime.combine(period_date, datetime.min.time())
@@ -268,9 +304,11 @@ class DonationsTable:
                 & (Donation.created_at >= start_dt)
             ).scalar()
 
+
             summary.unique_donors = unique or 0
             summary.updated_at = datetime.now()
             summary.save()
+
 
     def get_region_summaries(self, period: str = 'all_time') -> list:
         summaries = DonationSummary.select().where(DonationSummary.period == period)
@@ -285,6 +323,7 @@ class DonationsTable:
             }
             for s in summaries
         ]
+
 
     def _donation_to_dict(self, d: Donation) -> dict:
         if not d:
@@ -307,6 +346,7 @@ class DonationsTable:
             'status': d.status,
             'created_at': d.created_at.isoformat() if d.created_at else None,
         }
+
 
 
 Donations = DonationsTable(DB)

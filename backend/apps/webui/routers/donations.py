@@ -1,161 +1,309 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
-from typing import List, Optional
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, status, Depends, Query
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict
+from peewee import fn
 
-from apps.webui.models.donations import Donations
 from utils.utils import get_current_user
+from apps.webui.models.donations import Donations, Donation
+from apps.webui.models.users import User
 
 router = APIRouter()
 
+# =========================
+# Schemas
+# =========================
+class QuickDonationIn(BaseModel):
+    amount: float = Field(..., gt=0)
+    currency: Optional[str] = "HKD"
+    payment_method: Optional[str] = None
+    transaction_id: Optional[str] = None
 
-############################
-# Pydantic Schemas
-############################
-class QuickDonationRequest(BaseModel):
-    amount: float
-
-
-class AnonymousDonationRequest(BaseModel):
+class GuestDonationIn(BaseModel):
     child_id: str
-    amount: float
+    amount: float = Field(..., gt=0)
+    currency: Optional[str] = "HKD"
+    payment_method: Optional[str] = None
+    transaction_id: Optional[str] = None
 
-
-class StandardDonationRequest(BaseModel):
+class StandardDonationIn(BaseModel):
     user_id: str
     child_id: str
-    amount: float
-    referral_code: Optional[str] = None
+    amount: float = Field(..., gt=0)
+    currency: Optional[str] = "HKD"
     payment_method: Optional[str] = None
+    transaction_id: Optional[str] = None
+    referral_code: str = None
 
+class DonationOut(BaseModel):
+    id: str
+    user_id: Optional[str] = None
+    user_name: Optional[str] = None
+    child_id: Optional[str] = None
+    child_name: Optional[str] = None
+    region_id: Optional[str] = None
+    region_name: Optional[str] = None
+    amount: float
+    currency: str
+    donation_type: str
+    is_anonymous: bool
+    referral_code: Optional[str] = None
+    transaction_id: Optional[str] = None
+    payment_method: Optional[str] = None
+    status: str
+    created_at: Optional[str] = None
 
-class TotalDonationResponse(BaseModel):
+class TopDonorOut(BaseModel):
+    user_id: str
+    user_name: Optional[str] = None
+    total_amount: float
+    donation_count: int
+
+class TopSingleDonationOut(BaseModel):
+    user_id: str
+    user_name: Optional[str] = None
+    max_amount: float
+
+class ChildTotalsIn(BaseModel):
+    child_ids: List[str]
+
+class ChildTotalOut(BaseModel):
     child_id: str
     total_amount: float
 
+class RecentDonorOut(BaseModel):
+    user_id: str
+    user_name: Optional[str] = None
+    amount: float
+    created_at: Optional[str] = None
 
-############################
-# Create Quick Donation
-############################
-@router.post("/quick", status_code=status.HTTP_201_CREATED)
-def create_quick_donation(body: QuickDonationRequest):
+# =========================
+# Create Donations
+# =========================
+
+@router.post("/quick", response_model=DonationOut, status_code=status.HTTP_201_CREATED)
+def create_quick_donation(body: QuickDonationIn):
+    """Create a quick donation (amount only; anonymous)."""
     try:
-        donation = Donations.create_donation(
-            amount=body.amount,
+        return Donations.create_donation(
             donation_type="Quick",
+            user_id=None,
+            child_id=None,
+            amount=body.amount,
+            currency=body.currency,
+            payment_method=body.payment_method,
+            transaction_id=body.transaction_id,
         )
-        return donation
     except Exception as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Quick donation failed: {str(e)}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Quick donation failed: {e}")
 
-
-############################
-# Create Anonymous Donation
-############################
-@router.post("/anonymous", status_code=status.HTTP_201_CREATED)
-def create_anonymous_donation(body: AnonymousDonationRequest):
+@router.post("/anonymous", response_model=DonationOut, status_code=status.HTTP_201_CREATED)
+def create_anonymous_donation(body: GuestDonationIn):
+    """Create an anonymous (guest) donation for a child."""
     try:
-        donation = Donations.create_donation(
+        return Donations.create_donation(
+            donation_type="Guest",
+            user_id=None,
             child_id=body.child_id,
             amount=body.amount,
-            donation_type="Guest",
+            currency=body.currency,
+            payment_method=body.payment_method,
+            transaction_id=body.transaction_id,
         )
-        return donation
     except Exception as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Anonymous donation failed: {str(e)}")
-
-
-############################
-# Create Standard Donation
-############################
-@router.post("/standard", status_code=status.HTTP_201_CREATED)
-def create_standard_donation(body: StandardDonationRequest, user=Depends(get_current_user)):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Anonymous donation failed: {e}")
+    
+@router.post("/standard", response_model=DonationOut, status_code=status.HTTP_201_CREATED)
+def create_standard_donation(body: StandardDonationIn):
+    """Create a standard donation (logged-in user -> child)."""
     try:
-        if user.id != body.user_id and user.role != "admin":
-            raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Not authorized to donate for this user")
-
-        donation = Donations.create_donation(
+        return Donations.create_donation(
+            donation_type="Standard",
             user_id=body.user_id,
             child_id=body.child_id,
             amount=body.amount,
-            referral_code=body.referral_code,
+            currency=body.currency,
             payment_method=body.payment_method,
-            donation_type="Standard",
+            transaction_id=body.transaction_id,
         )
-        return donation
-    except HTTPException:
-        raise
     except Exception as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Standard donation failed: {str(e)}")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Standard donation failed: {e}")
 
+# =========================
+# Reports / Analytics
+# =========================
 
-############################
-# Get Top Donors (overall)
-############################
-@router.get("/top", status_code=status.HTTP_200_OK)
-def get_top_donors(limit: int = Query(10, gt=0, le=50)):
-    try:
-        return Donations.get_top_donors(limit=limit)
-    except Exception as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error fetching top donors: {str(e)}")
+@router.get("/top/total", response_model=List[TopDonorOut])
+def top_donors_total(k: int = Query(10, gt=0, le=100)):
+    """
+    Top K users by total donated (all children). Excludes NULL and '0000' sentinel.
+    """
+    q = (
+        Donation
+        .select(
+            Donation.user_id,
+            fn.SUM(Donation.amount).alias("total_amount"),
+            fn.COUNT(Donation.id).alias("donation_count"),
+        )
+        .where(
+            (Donation.status == "completed") &
+            Donation.user.is_null(False) &
+            (Donation.user_id != "0000")
+        )
+        .group_by(Donation.user_id)
+        .order_by(fn.SUM(Donation.amount).desc())
+        .limit(k)
+    )
+    out: List[TopDonorOut] = []
+    for row in q:
+        user_name = None
+        try:
+            # row.user is a User model thanks to FK; it may be None if dangling
+            user_name = row.user.name if row.user else None
+        except Exception:
+            pass
+        out.append(
+            TopDonorOut(
+                user_id=row.user_id,
+                user_name=user_name,
+                total_amount=float(row.total_amount or 0),
+                donation_count=int(row.donation_count or 0),
+            )
+        )
+    return out
 
+@router.get("/top/total/{child_id}", response_model=List[TopDonorOut])
+def top_donors_total_for_child(child_id: str, k: int = Query(10, gt=0, le=100)):
+    """
+    Top K users by total donated to a specific child.
+    """
+    q = (
+        Donation
+        .select(
+            Donation.user_id,
+            fn.SUM(Donation.amount).alias("total_amount"),
+            fn.COUNT(Donation.id).alias("donation_count"),
+        )
+        .where(
+            (Donation.status == "completed") &
+            (Donation.child_id == child_id) &
+            Donation.user.is_null(False) &
+            (Donation.user_id != "0000")
+        )
+        .group_by(Donation.user_id)
+        .order_by(fn.SUM(Donation.amount).desc())
+        .limit(k)
+    )
+    out: List[TopDonorOut] = []
+    for row in q:
+        user_name = None
+        try:
+            user_name = row.user.name if row.user else None
+        except Exception:
+            pass
+        out.append(
+            TopDonorOut(
+                user_id=row.user_id,
+                user_name=user_name,
+                total_amount=float(row.total_amount or 0),
+                donation_count=int(row.donation_count or 0),
+            )
+        )
+    return out
 
-############################
-# Get Top Donors by Child (total donation)
-############################
-@router.get("/top/{child_id}", status_code=status.HTTP_200_OK)
-def get_top_donors_by_child(child_id: str, limit: int = Query(10, gt=0, le=50)):
-    try:
-        donations = Donations.get_donations_by_child(child_id)
-        if not donations:
-            return []
-        # Aggregate totals by user
-        totals = {}
-        for d in donations:
-            uid = d["user_id"]
-            totals[uid] = totals.get(uid, 0) + d["amount"]
-        ranked = sorted(totals.items(), key=lambda x: x[1], reverse=True)[:limit]
-        return [{"user_id": uid, "total_amount": amt} for uid, amt in ranked]
-    except Exception as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error fetching top donors for child: {str(e)}")
+@router.get("/top/single/{child_id}", response_model=List[TopSingleDonationOut])
+def top_single_donations_for_child(child_id: str, k: int = Query(10, gt=0, le=100)):
+    """
+    Top K users by highest single donation to a specific child.
+    """
+    q = (
+        Donation
+        .select(
+            Donation.user_id,
+            fn.MAX(Donation.amount).alias("max_amount"),
+        )
+        .where(
+            (Donation.status == "completed") &
+            (Donation.child_id == child_id) &
+            Donation.user.is_null(False) &
+            (Donation.user_id != "0000")
+        )
+        .group_by(Donation.user_id)
+        .order_by(fn.MAX(Donation.amount).desc())
+        .limit(k)
+    )
+    out: List[TopSingleDonationOut] = []
+    for row in q:
+        user_name = None
+        try:
+            user_name = row.user.name if row.user else None
+        except Exception:
+            pass
+        out.append(
+            TopSingleDonationOut(
+                user_id=row.user_id,
+                user_name=user_name,
+                max_amount=float(row.max_amount or 0),
+            )
+        )
+    return out
 
+@router.post("/total/by-children", response_model=List[ChildTotalOut])
+def total_amount_by_children(body: ChildTotalsIn):
+    """
+    Total donated amount per child for a given list of child_ids.
+    Returns zeros for ids with no donations.
+    """
+    if not body.child_ids:
+        return []
+    agg = (
+        Donation
+        .select(
+            Donation.child_id,
+            fn.SUM(Donation.amount).alias("total_amount"),
+        )
+        .where(
+            (Donation.status == "completed") &
+            (Donation.child_id.in_(body.child_ids))
+        )
+        .group_by(Donation.child_id)
+    )
+    totals_map: Dict[str, float] = {cid: 0.0 for cid in body.child_ids}
+    for row in agg:
+        totals_map[row.child_id] = float(row.total_amount or 0)
+    return [ChildTotalOut(child_id=cid, total_amount=totals_map[cid]) for cid in body.child_ids]
 
-############################
-# Get Top Single Donors by Child
-############################
-@router.get("/top_single/{child_id}", status_code=status.HTTP_200_OK)
-def get_top_single_donors_by_child(child_id: str, limit: int = Query(10, gt=0, le=50)):
-    try:
-        donations = Donations.get_donations_by_child(child_id)
-        if not donations:
-            return []
-        ranked = sorted(donations, key=lambda d: d["amount"], reverse=True)[:limit]
-        return ranked
-    except Exception as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error fetching top single donations: {str(e)}")
-
-
-############################
-# Get Total Donation for List of Children
-############################
-@router.post("/total_by_children", response_model=List[TotalDonationResponse])
-def get_total_donations_for_children(child_ids: List[str] = Body(...)):
-    try:
-        results = []
-        for cid in child_ids:
-            stats = Donations.get_donation_stats(child_id=cid)
-            results.append(TotalDonationResponse(child_id=cid, total_amount=stats["total_amount"]))
-        return results
-    except Exception as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error calculating totals: {str(e)}")
-
-
-############################
-# Get Recent Donors by Child
-############################
-@router.get("/recent/{child_id}", status_code=status.HTTP_200_OK)
-def get_recent_donors_by_child(child_id: str, limit: int = Query(10, gt=0, le=50)):
-    try:
-        donations = Donations.get_donations_by_child(child_id)[:limit]
-        return donations
-    except Exception as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error fetching recent donors: {str(e)}")
+@router.get("/recent-donors/{child_id}", response_model=List[RecentDonorOut])
+def recent_donors_by_child(child_id: str, k: int = Query(10, gt=0, le=100)):
+    """
+    Return up to K most recent **unique** donors (excluding NULL and '0000') for a child.
+    De-dupes by user_id using recent donations first.
+    """
+    rows = (
+        Donation
+        .select()
+        .where(
+            (Donation.status == "completed") &
+            (Donation.child_id == child_id) &
+            Donation.user.is_null(False) &
+            (Donation.user_id != "0000")
+        )
+        .order_by(Donation.created_at.desc())
+        .limit(200)  # fetch extra to allow de-dupe
+    )
+    seen = set()
+    out: List[RecentDonorOut] = []
+    for d in rows:
+        if d.user_id in seen:
+            continue
+        seen.add(d.user_id)
+        out.append(
+            RecentDonorOut(
+                user_id=d.user_id,
+                user_name=(d.user.name if d.user else None),
+                amount=float(d.amount),
+                created_at=d.created_at.isoformat() if d.created_at else None,
+            )
+        )
+        if len(out) >= k:
+            break
+    return out
