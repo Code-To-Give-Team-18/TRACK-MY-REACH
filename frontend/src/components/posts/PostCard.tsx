@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Edit, Trash2, Heart, MessageSquare, Calendar } from 'lucide-react';
+import { Play, Edit, Trash2, Heart, MessageSquare, Calendar, Eye } from 'lucide-react';
 import { type PostResponse } from '@/services/post.service';
 import { getBackendUrl } from '@/utils/url.utils';
 import { postService } from '@/services/post.service';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface PostCardProps {
   post: PostResponse;
@@ -60,15 +61,13 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
       className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow relative bg-white"
     >
       <div className="absolute top-2 right-2 flex gap-2 z-10">
-        {onEdit && (
-          <button
-            onClick={() => onEdit(post)}
-            className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            title="Edit"
-          >
-            <Edit className="w-4 h-4" />
-          </button>
-        )}
+        <Link
+          href={`/post-management/${post.id}`}
+          className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          title="View Details"
+        >
+          <Eye className="w-4 h-4" />
+        </Link>
         {onDelete && (
           <button
             onClick={handleDelete}

@@ -29,8 +29,7 @@ async def create_post(form_data: PostCreateRequest, user=Depends(get_current_use
         media_urls = []
         if form_data.picture_link:
             media_urls.append(form_data.picture_link)
-        if form_data.video_link:
-            media_urls.append(form_data.video_link)
+        # video_link should NOT be added to media_urls - it's stored separately
 
         post = Posts.create_post(
             child_id=form_data.child_id,

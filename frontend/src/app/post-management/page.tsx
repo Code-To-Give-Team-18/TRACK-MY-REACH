@@ -3,64 +3,53 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, Upload, X, Image as ImageIcon, Video, 
-  Plus, Grid, List, Search, Filter 
+  Plus, Grid, Search, Filter 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { postService, type PostResponse, type CreatePostData } from '@/services/post.service';
 import { childrenService, type Child } from '@/services/children.service';
 import { fileService } from '@/services/file.service';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import PostCard from '@/components/posts/PostCard';
 
-const postTypes = [
+const POST_TYPES = [
   { value: 'update', label: 'Update' },
   { value: 'story', label: 'Story' },
   { value: 'achievement', label: 'Achievement' },
   { value: 'thank_you', label: 'Thank You' },
 ];
 
-type ViewMode = 'list' | 'create' | 'edit';
+type ViewMode = 'list' | 'create';
 
 export default function PostManagementPage() {
-  const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [posts, setPosts] = useState<PostResponse[]>([]);
+  const [children, setChildren] = useState<Child[]>([]);
+  const [loading, setLoading] = useState(false);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const [loadingChildren, setLoadingChildren] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPostType, setSelectedPostType] = useState('all');
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success');
   
   // Form states
-  const [editingPost, setEditingPost] = useState<PostResponse | null>(null);
-  const [children, setChildren] = useState<Child[]>([]);
   const [selectedChildId, setSelectedChildId] = useState('');
   const [caption, setCaption] = useState('');
   const [postType, setPostType] = useState('update');
   const [videoLink, setVideoLink] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [loadingChildren, setLoadingChildren] = useState(true);
-  const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState<'success' | 'error'>('success');
-  
-  // Image upload states
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  
-  // Video upload states
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [useVideoFile, setUseVideoFile] = useState(true);
 
-  // Fetch posts
   useEffect(() => {
     fetchPosts();
   }, [page]);
 
-  // Fetch children on component mount
   useEffect(() => {
     fetchChildren();
   }, []);
@@ -68,18 +57,8 @@ export default function PostManagementPage() {
   const fetchPosts = async () => {
     try {
       setLoadingPosts(true);
-      // Use getAllPosts since backend doesn't have a my-posts endpoint
-      // We'll get all posts for now - could filter by author_id on frontend if needed
-      const data = await postService.getAllPosts({ 
-        sort: 'recent',
-        page, 
-        limit: 12 
-      });
-      if (page === 1) {
-        setPosts(data.items);
-      } else {
-        setPosts(prev => [...prev, ...data.items]);
-      }
+      const data = await postService.getAllPosts({ sort: 'recent', page, limit: 12 });
+      setPosts(prev => page === 1 ? data.items : [...prev, ...data.items]);
       setHasMore(data.has_next);
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -106,25 +85,6 @@ export default function PostManagementPage() {
     }
   };
 
-  const handleEdit = async (post: PostResponse) => {
-    setEditingPost(post);
-    setSelectedChildId(post.child_id);
-    setCaption(post.caption || '');
-    setPostType(post.post_type || 'update');
-    setVideoLink(post.video_link || '');
-    setViewMode('edit');
-    setMessage('');
-    
-    // Clear any existing media previews
-    setSelectedImage(null);
-    setImagePreview(null);
-    setSelectedVideo(null);
-    if (videoPreview) {
-      URL.revokeObjectURL(videoPreview);
-    }
-    setVideoPreview(null);
-  };
-
   const handleDelete = (postId: string) => {
     setPosts(prev => prev.filter(p => p.id !== postId));
     setMessage('Post deleted successfully!');
@@ -137,74 +97,41 @@ export default function PostManagementPage() {
     setSelectedImage(null);
     setImagePreview(null);
     setSelectedVideo(null);
-    if (videoPreview) {
-      URL.revokeObjectURL(videoPreview);
-    }
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
     setVideoPreview(null);
     setPostType('update');
-    setEditingPost(null);
-    if (children.length > 0) {
-      setSelectedChildId(children[0].id);
-    }
+    if (children.length > 0) setSelectedChildId(children[0].id);
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        setMessage('Please select a valid image file');
-        setMessageType('error');
-        return;
-      }
-      
-      if (file.size > 10 * 1024 * 1024) {
-        setMessage('Image size should be less than 10MB');
-        setMessageType('error');
-        return;
-      }
+    if (!file) return;
 
+    const isImage = type === 'image';
+    const validType = isImage ? file.type.startsWith('image/') : file.type.startsWith('video/');
+    const maxSize = isImage ? 10 : 100;
+    
+    if (!validType) {
+      setMessage(`Please select a valid ${type} file`);
+      setMessageType('error');
+      return;
+    }
+    
+    if (file.size > maxSize * 1024 * 1024) {
+      setMessage(`${isImage ? 'Image' : 'Video'} size should be less than ${maxSize}MB`);
+      setMessageType('error');
+      return;
+    }
+
+    if (isImage) {
       setSelectedImage(file);
-      
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
+      reader.onloadend = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-  };
-
-  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('video/')) {
-        setMessage('Please select a valid video file');
-        setMessageType('error');
-        return;
-      }
-      
-      if (file.size > 100 * 1024 * 1024) {
-        setMessage('Video size should be less than 100MB');
-        setMessageType('error');
-        return;
-      }
-
+    } else {
       setSelectedVideo(file);
-      const videoUrl = URL.createObjectURL(file);
-      setVideoPreview(videoUrl);
+      setVideoPreview(URL.createObjectURL(file));
     }
-  };
-
-  const removeVideo = () => {
-    if (videoPreview) {
-      URL.revokeObjectURL(videoPreview);
-    }
-    setSelectedVideo(null);
-    setVideoPreview(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -223,41 +150,20 @@ export default function PostManagementPage() {
       let pictureLink: string | undefined;
       let videoLinkFinal: string | undefined;
       
-      // Upload image if selected
       if (selectedImage) {
         setMessage('Uploading image...');
-        setUploadingImage(true);
-        try {
-          const uploadResponse = await fileService.uploadFile(selectedImage);
-          pictureLink = `/api/v1/files/${uploadResponse.id}/content`;
-        } catch (uploadError) {
-          console.error('Error uploading image:', uploadError);
-          setMessage('Failed to upload image, but continuing...');
-          setMessageType('error');
-        } finally {
-          setUploadingImage(false);
-        }
+        const uploadResponse = await fileService.uploadFile(selectedImage);
+        pictureLink = `/api/v1/files/${uploadResponse.id}/content`;
       }
       
-      // Upload video if selected
       if (useVideoFile && selectedVideo) {
         setMessage('Uploading video...');
-        setUploadingVideo(true);
-        try {
-          const uploadResponse = await fileService.uploadVideo(selectedVideo);
-          videoLinkFinal = `/api/v1/files/video/${uploadResponse.id}/stream`;
-        } catch (uploadError) {
-          console.error('Error uploading video:', uploadError);
-          setMessage('Failed to upload video, but continuing...');
-          setMessageType('error');
-        } finally {
-          setUploadingVideo(false);
-        }
+        const uploadResponse = await fileService.uploadVideo(selectedVideo);
+        videoLinkFinal = `/api/v1/files/video/${uploadResponse.id}/stream`;
       } else if (!useVideoFile && videoLink) {
         videoLinkFinal = videoLink;
       }
 
-      // Create or update the post
       const postData: CreatePostData = {
         child_id: selectedChildId,
         caption,
@@ -265,55 +171,150 @@ export default function PostManagementPage() {
         video_link: videoLinkFinal,
       };
 
-      if (editingPost) {
-        setMessage('Updating post...');
-        const updated = await postService.updatePost(editingPost.id, postData);
-        setPosts(prev => prev.map(p => p.id === updated.id ? updated : p));
-        setMessage('Post updated successfully!');
-      } else {
-        setMessage('Creating post...');
-        const newPost = await postService.createPost(postData);
-        setPosts(prev => [newPost, ...prev]);
-        setMessage('Post created successfully!');
-      }
-      
+      setMessage('Creating post...');
+      const newPost = await postService.createPost(postData);
+      setPosts(prev => [newPost, ...prev]);
+      setMessage('Post created successfully!');
       setMessageType('success');
       resetForm();
       setViewMode('list');
-      
     } catch (err) {
-      console.error('Error saving post:', err);
-      setMessage(editingPost ? 'Error updating post. Please try again.' : 'Error creating post. Please try again.');
+      console.error('Error creating post:', err);
+      setMessage('Error creating post. Please try again.');
       setMessageType('error');
     } finally {
       setLoading(false);
-      setUploadingImage(false);
-      setUploadingVideo(false);
     }
   };
 
   const filteredPosts = posts.filter(post => {
-    const matchesSearch = searchQuery === '' || 
+    const matchesSearch = !searchQuery || 
       post.caption?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       post.child_name?.toLowerCase().includes(searchQuery.toLowerCase());
-    
     const matchesType = selectedPostType === 'all' || post.post_type === selectedPostType;
-    
     return matchesSearch && matchesType;
   });
 
   const selectedChild = children.find(c => c.id === selectedChildId);
 
+  const MediaUpload = ({ type }: { type: 'image' | 'video' }) => {
+    const isImage = type === 'image';
+    const hasPreview = isImage ? imagePreview : videoPreview;
+    const file = isImage ? selectedImage : selectedVideo;
+    
+    return (
+      <div>
+        <label className="block font-medium mb-2 text-gray-700">
+          {isImage ? <ImageIcon className="w-4 h-4 inline mr-1" /> : <Video className="w-4 h-4 inline mr-1" />}
+          Upload {isImage ? 'Image' : 'Video'} {!isImage && '(Optional)'}
+        </label>
+        
+        {!isImage && (
+          <div className="flex gap-2 mb-3">
+            <button
+              type="button"
+              onClick={() => { setUseVideoFile(true); setVideoLink(''); }}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                useVideoFile ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Upload Video File
+            </button>
+            <button
+              type="button"
+              onClick={() => { setUseVideoFile(false); if (videoPreview) { URL.revokeObjectURL(videoPreview); setVideoPreview(null); setSelectedVideo(null); } }}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                !useVideoFile ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Use Video URL
+            </button>
+          </div>
+        )}
+        
+        {(!isImage && !useVideoFile) ? (
+          <>
+            <input
+              type="url"
+              className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              value={videoLink}
+              onChange={e => setVideoLink(e.target.value)}
+              placeholder="https://youtube.com/watch?v=... or other video URL"
+            />
+            <p className="text-sm text-gray-500 mt-1">Add a YouTube or other video link</p>
+          </>
+        ) : !hasPreview ? (
+          <div className="relative">
+            <input
+              type="file"
+              accept={`${type}/*`}
+              onChange={e => handleFileSelect(e, type)}
+              className="hidden"
+              id={`${type}-upload`}
+            />
+            <label
+              htmlFor={`${type}-upload`}
+              className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-orange-500 cursor-pointer transition-colors bg-gray-50 hover:bg-orange-50"
+            >
+              <div className="text-center">
+                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-600">Click to upload {isImage ? 'an image' : 'a video'}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {isImage ? 'PNG, JPG up to 10MB' : 'MP4, WebM, MOV up to 100MB'}
+                </p>
+              </div>
+            </label>
+          </div>
+        ) : (
+          <div className="relative rounded-xl overflow-hidden border">
+            {isImage ? (
+              imagePreview && (
+                <div className="relative h-64 bg-gray-100">
+                  <Image src={imagePreview} alt="Preview" fill className="object-contain" />
+                </div>
+              )
+            ) : (
+              <>
+                {videoPreview && <video src={videoPreview} controls className="w-full h-64 bg-black" />}
+                {file && (
+                  <div className="p-2 bg-gray-100 text-sm text-gray-600">
+                    {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                  </div>
+                )}
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (isImage) {
+                  setSelectedImage(null);
+                  setImagePreview(null);
+                } else {
+                  if (videoPreview) URL.revokeObjectURL(videoPreview);
+                  setSelectedVideo(null);
+                  setVideoPreview(null);
+                }
+              }}
+              className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <section className="py-20 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 min-h-screen">
       <div className="container mx-auto px-4">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="max-w-6xl mx-auto"
         >
+          {/* Header */}
           <div className="text-center mb-10">
             <motion.div
               initial={{ scale: 0 }}
@@ -330,35 +331,24 @@ export default function PostManagementPage() {
 
           {/* View Toggle */}
           <div className="flex justify-center mb-8">
-            <div className="bg-gray-100 rounded-full p-1 inline-flex relative">
-              <button
-                onClick={() => {
-                  setViewMode('list');
-                  resetForm();
-                }}
-                className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
-                  viewMode === 'list' 
-                    ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-md transform scale-105' 
-                    : 'text-gray-600 hover:text-gray-900 bg-transparent'
-                }`}
-              >
-                <Grid className="w-4 h-4 inline mr-2" />
-                View Posts
-              </button>
-              <button
-                onClick={() => {
-                  setViewMode('create');
-                  resetForm();
-                }}
-                className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
-                  viewMode === 'create' 
-                    ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-md transform scale-105' 
-                    : 'text-gray-600 hover:text-gray-900 bg-transparent'
-                }`}
-              >
-                <Plus className="w-4 h-4 inline mr-2" />
-                Create Post
-              </button>
+            <div className="bg-gray-100 rounded-full p-1 inline-flex">
+              {[
+                { mode: 'list' as ViewMode, icon: Grid, label: 'View Posts' },
+                { mode: 'create' as ViewMode, icon: Plus, label: 'Create Post' }
+              ].map(({ mode, icon: Icon, label }) => (
+                <button
+                  key={mode}
+                  onClick={() => { setViewMode(mode); if (mode === 'list') resetForm(); }}
+                  className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
+                    viewMode === mode 
+                      ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-md transform scale-105' 
+                      : 'text-gray-600 hover:text-gray-900 bg-transparent'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 inline mr-2" />
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -370,9 +360,7 @@ export default function PostManagementPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className={`mb-6 p-4 text-center rounded-lg ${
-                  messageType === 'success' 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-red-100 text-red-700'
+                  messageType === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                 }`}
               >
                 {message}
@@ -388,25 +376,20 @@ export default function PostManagementPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                transition={{ 
-                  duration: 0.2,
-                  ease: "easeInOut"
-                }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
               >
                 {/* Search and Filter */}
                 <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
                   <div className="flex flex-col md:flex-row gap-4">
-                    <div className="flex-1">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                          type="text"
-                          placeholder="Search posts..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        />
-                      </div>
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <input
+                        type="text"
+                        placeholder="Search posts..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      />
                     </div>
                     <div className="flex items-center gap-2">
                       <Filter className="text-gray-400 w-5 h-5" />
@@ -416,7 +399,7 @@ export default function PostManagementPage() {
                         className="border px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       >
                         <option value="all">All Types</option>
-                        {postTypes.map(type => (
+                        {POST_TYPES.map(type => (
                           <option key={type.value} value={type.value}>{type.label}</option>
                         ))}
                       </select>
@@ -429,9 +412,9 @@ export default function PostManagementPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[...Array(6)].map((_, i) => (
                       <div key={i} className="bg-white rounded-lg p-4 animate-pulse">
-                        <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
-                        <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                        <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                        <div className="h-48 bg-gray-200 rounded-lg mb-4" />
+                        <div className="h-4 bg-gray-200 rounded mb-2" />
+                        <div className="h-4 bg-gray-200 rounded w-2/3" />
                       </div>
                     ))}
                   </div>
@@ -454,16 +437,9 @@ export default function PostManagementPage() {
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {filteredPosts.map(post => (
-                        <PostCard
-                          key={post.id}
-                          post={post}
-                          onEdit={handleEdit}
-                          onDelete={handleDelete}
-                        />
+                        <PostCard key={post.id} post={post} onDelete={handleDelete} />
                       ))}
                     </div>
-                    
-                    {/* Load More */}
                     {hasMore && !loadingPosts && (
                       <div className="text-center mt-8">
                         <button
@@ -483,24 +459,17 @@ export default function PostManagementPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                transition={{ 
-                  duration: 0.2,
-                  ease: "easeInOut"
-                }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
                 className="max-w-2xl mx-auto"
               >
                 <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl p-8 space-y-6">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                    {editingPost ? 'Edit Post' : 'Create New Post'}
-                  </h3>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Create New Post</h3>
 
                   {/* Child Selector */}
                   <div>
                     <label className="block font-medium mb-2 text-gray-700">Select Child</label>
                     {loadingChildren ? (
-                      <div className="w-full border px-4 py-3 rounded-xl bg-gray-50 animate-pulse">
-                        Loading children...
-                      </div>
+                      <div className="w-full border px-4 py-3 rounded-xl bg-gray-50 animate-pulse">Loading children...</div>
                     ) : children.length === 0 ? (
                       <div className="w-full border px-4 py-3 rounded-xl bg-yellow-50 text-yellow-800">
                         No children found. Please add children first.
@@ -512,7 +481,6 @@ export default function PostManagementPage() {
                           value={selectedChildId}
                           onChange={e => setSelectedChildId(e.target.value)}
                           required
-                          disabled={!!editingPost}
                         >
                           {children.map(child => (
                             <option key={child.id} value={child.id}>
@@ -520,7 +488,6 @@ export default function PostManagementPage() {
                             </option>
                           ))}
                         </select>
-                        
                         {selectedChild && (
                           <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                             <p className="text-sm text-blue-700">
@@ -544,9 +511,7 @@ export default function PostManagementPage() {
                       required
                       placeholder="Share what's happening with this child... Their progress, achievements, or daily activities..."
                     />
-                    <p className="text-sm text-gray-500 mt-1">
-                      This will be visible to donors following this child
-                    </p>
+                    <p className="text-sm text-gray-500 mt-1">This will be visible to donors following this child</p>
                   </div>
 
                   {/* Post Type */}
@@ -557,164 +522,20 @@ export default function PostManagementPage() {
                       value={postType}
                       onChange={e => setPostType(e.target.value)}
                     >
-                      {postTypes.map(type => (
+                      {POST_TYPES.map(type => (
                         <option key={type.value} value={type.value}>{type.label}</option>
                       ))}
                     </select>
                   </div>
 
-                  {/* Image Upload */}
-                  <div>
-                    <label className="block font-medium mb-2 text-gray-700">
-                      <ImageIcon className="w-4 h-4 inline mr-1" />
-                      Upload Image
-                    </label>
-                    
-                    {!imagePreview ? (
-                      <div className="relative">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageSelect}
-                          className="hidden"
-                          id="image-upload"
-                        />
-                        <label
-                          htmlFor="image-upload"
-                          className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-orange-500 cursor-pointer transition-colors bg-gray-50 hover:bg-orange-50"
-                        >
-                          <div className="text-center">
-                            <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                            <p className="text-gray-600">Click to upload an image</p>
-                            <p className="text-sm text-gray-500 mt-1">PNG, JPG up to 10MB</p>
-                          </div>
-                        </label>
-                      </div>
-                    ) : (
-                      <div className="relative rounded-xl overflow-hidden border">
-                        <div className="relative h-64 bg-gray-100">
-                          <Image
-                            src={imagePreview}
-                            alt="Preview"
-                            fill
-                            className="object-contain"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={removeImage}
-                          className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Video Upload or Link */}
-                  <div>
-                    <label className="block font-medium mb-2 text-gray-700">
-                      <Video className="w-4 h-4 inline mr-1" />
-                      Video (Optional)
-                    </label>
-                    
-                    <div className="flex gap-2 mb-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUseVideoFile(true);
-                          setVideoLink('');
-                        }}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                          useVideoFile 
-                            ? 'bg-orange-500 text-white' 
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        Upload Video File
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUseVideoFile(false);
-                          removeVideo();
-                        }}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                          !useVideoFile 
-                            ? 'bg-orange-500 text-white' 
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        Use Video URL
-                      </button>
-                    </div>
-                    
-                    {useVideoFile ? (
-                      !videoPreview ? (
-                        <div className="relative">
-                          <input
-                            type="file"
-                            accept="video/*"
-                            onChange={handleVideoSelect}
-                            className="hidden"
-                            id="video-upload"
-                          />
-                          <label
-                            htmlFor="video-upload"
-                            className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-orange-500 cursor-pointer transition-colors bg-gray-50 hover:bg-orange-50"
-                          >
-                            <div className="text-center">
-                              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                              <p className="text-gray-600">Click to upload a video</p>
-                              <p className="text-sm text-gray-500 mt-1">MP4, WebM, MOV up to 100MB</p>
-                            </div>
-                          </label>
-                        </div>
-                      ) : (
-                        <div className="relative rounded-xl overflow-hidden border">
-                          <video
-                            src={videoPreview}
-                            controls
-                            className="w-full h-64 bg-black"
-                          />
-                          <button
-                            type="button"
-                            onClick={removeVideo}
-                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                          {selectedVideo && (
-                            <div className="p-2 bg-gray-100 text-sm text-gray-600">
-                              {selectedVideo.name} ({(selectedVideo.size / 1024 / 1024).toFixed(2)} MB)
-                            </div>
-                          )}
-                        </div>
-                      )
-                    ) : (
-                      <>
-                        <input
-                          type="url"
-                          className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                          value={videoLink}
-                          onChange={e => setVideoLink(e.target.value)}
-                          placeholder="https://youtube.com/watch?v=... or other video URL"
-                        />
-                        <p className="text-sm text-gray-500 mt-1">
-                          Add a YouTube or other video link to include with the post
-                        </p>
-                      </>
-                    )}
-                  </div>
+                  <MediaUpload type="image" />
+                  <MediaUpload type="video" />
 
                   {/* Action Buttons */}
                   <div className="flex gap-4">
                     <button
                       type="button"
-                      onClick={() => {
-                        setViewMode('list');
-                        resetForm();
-                      }}
+                      onClick={() => { setViewMode('list'); resetForm(); }}
                       className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-4 text-lg font-semibold rounded-xl transition-all"
                     >
                       Cancel
@@ -724,7 +545,7 @@ export default function PostManagementPage() {
                       className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white py-4 text-lg font-semibold rounded-xl transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                       disabled={loading || loadingChildren || children.length === 0}
                     >
-                      {uploadingImage ? 'Uploading Image...' : uploadingVideo ? 'Uploading Video...' : loading ? 'Saving...' : editingPost ? 'Update Post' : 'Create Post'}
+                      {loading ? 'Saving...' : 'Create Post'}
                     </button>
                   </div>
                 </form>
