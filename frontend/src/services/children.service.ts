@@ -66,7 +66,7 @@ export const childrenService = {
   },
 
   async createChild(data: CreateChildData): Promise<ChildResponse> {
-    const response = await apiClient.post('/children', data);
+    const response = await apiClient.post('/children/create', data);
     return response.data;
   },
 

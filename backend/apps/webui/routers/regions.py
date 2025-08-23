@@ -23,6 +23,13 @@ def create_region(body: RegionCreate):
 def list_regions():
     return Regions.get_all_regions()
 
+@router.get("/{region_id}")
+def get_region(region_id: str):
+    region = Regions.get_region_by_id(region_id)
+    if not region:
+        raise HTTPException(status_code=404, detail="Region not found")
+    return region
+
 @router.patch("/{region_id}")
 def update_region_name(region_id: str, body: RegionUpdate):
     existing = Regions.get_region_by_name(body.name)

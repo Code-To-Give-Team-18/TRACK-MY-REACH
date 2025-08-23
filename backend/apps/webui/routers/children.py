@@ -119,8 +119,8 @@ class ChildCreate(BaseModel):
     video_link: Optional[str] = None
     picture_link: Optional[str] = None
 
-@router.post("/", status_code=201)
-def create_child(body: ChildCreate, user=Depends(get_admin_user)):
+@router.post("/create", status_code=201)
+def create_child(body: ChildCreate, user=Depends(get_verified_user)):
     # ensure region exists
     if not Region.get_or_none(Region.id == body.region_id):
         raise HTTPException(status_code=404, detail="Region not found")
