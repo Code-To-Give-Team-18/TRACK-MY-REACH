@@ -294,6 +294,72 @@ class FollowersTable:
             'followed_at': follower.followed_at.isoformat() if follower.followed_at else None,
             'notifications_enabled': follower.notifications_enabled
         }
+    def get_followers_by_child(self, child_id: str) -> list:
+        """Get all followers for a specific child"""
+        return [
+            self._follower_with_user_to_dict(follower)
+            for follower in Follower.select()
+            .join(User)
+            .where(Follower.child == child_id)
+            .order_by(Follower.followed_at.desc())
+        ]
 
+    def get_children_followed_by_user(self, user_id: str) -> list:
+        """Get all children followed by a specific user"""
+        return [
+            self._follower_with_child_to_dict(follower)
+            for follower in Follower.select()
+            .join(Child)
+            .where(Follower.user == user_id)
+            .order_by(Follower.followed_at.desc())
+        ]
+
+    def create_follower(self, user_id: str, child_id: str, notifications_enabled: bool = True) -> bool:
+        """Create a new follower relationship"""
+        try:
+            Follower.create(
+                user=user_id,
+                child=child_id,
+                notifications_enabled=notifications_enabled
+            )
+            # Update child's follower count
+            child = Child.get(Child.id == child_id)
+            child.follower_count += 1
+            child.save()
+            return True
+        except IntegrityError:
+            return False
+
+    def delete_follower(self, user_id: str, child_id: str) -> bool:
+        """Delete a follower relationship"""
+        follower = Follower.get_or_none(
+            (Follower.user == user_id) & (Follower.child == child_id)
+        )
+        if follower:
+            follower.delete_instance()
+            # Update child's follower count
+            child = Child.get(Child.id == child_id)
+            child.follower_count = max(0, child.follower_count - 1)
+            child.save()
+            return True
+        return False
+
+    def get_top_k_children_by_followers(self, k: int) -> list:
+        """Get top K children by follower count with random tie-breaking"""
+        import random
+        
+        # Get all children with their follower counts
+        children = list(Child.select().order_by(Child.follower_count.desc(), fn.Random()))
+        
+        # Take top K
+        top_children = children[:k]
+        
+        return [
+            {
+                'child_id': str(child.id),
+                'follower_count': child.follower_count
+            }
+            for child in top_children
+        ]
 
 Followers = FollowersTable(DB)

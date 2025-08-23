@@ -12,6 +12,9 @@ from apps.webui.routers import (
     files,
     classrooms,
     children,
+    posts,
+    regions,
+    followers,
 )
 
 from config import (
@@ -85,7 +88,9 @@ app.include_router(files.router, prefix="/files", tags=["files"])
 app.include_router(utils.router, prefix="/utils", tags=["utils"])
 app.include_router(children.router, prefix="/children", tags=["children"])
 app.include_router(classrooms.router, tags=["classrooms"])
-
+app.include_router(posts.router, prefix="/posts", tags=["posts"])
+app.include_router(regions.router, prefix="/regions", tags=["regions"])
+app.include_router(followers.router, prefix="/followers", tags=["followers"])
 
 
 @app.get("/")
