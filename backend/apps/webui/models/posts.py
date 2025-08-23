@@ -15,6 +15,7 @@ class Post(Model):
     post_type = CharField(max_length=50, default='update')
     media_urls = TextField(null=True)
     video_link = CharField(max_length=500, null=True)
+    youtube_url = CharField(max_length=500, null=True)
     likes = IntegerField(default=0)
     comments_count = IntegerField(default=0)
     is_published = BooleanField(default=True)
@@ -233,6 +234,7 @@ class PostsTable:
             'post_type': post.post_type,
             'media_urls': media_urls,
             'video_link': post.video_link,
+            'youtube_url': post.youtube_url,
             'likes': post.likes,
             'comments_count': post.comments_count,
             'is_published': post.is_published,

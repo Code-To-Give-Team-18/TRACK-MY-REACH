@@ -27,6 +27,7 @@ class PostResponse(BaseModel):
     post_type: str
     media_urls: Optional[List[str]]
     video_link: Optional[str]
+    youtube_url: Optional[str]
     likes: int
     comments_count: int
     is_published: bool
