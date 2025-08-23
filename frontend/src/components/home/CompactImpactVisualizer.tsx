@@ -49,7 +49,7 @@ function ClassroomScene({ donationAmount }: { donationAmount: number }) {
         stencil: false,
         depth: true
       }}
-      camera={{ position: [0, 1.5, 3], fov: 45 }}
+      camera={{ position: [0, 1.2, 2], fov: 45 }}
       performance={{ min: 0.5 }}
     >
       <fog attach="fog" args={['#f0f0f0', 5, 15]} />
@@ -63,7 +63,7 @@ function ClassroomScene({ donationAmount }: { donationAmount: number }) {
         maxAzimuthAngle={Math.PI / 6}
         autoRotate
         autoRotateSpeed={0.3}
-        target={[0, 0.5, 0]}
+        target={[0, 0.4, 0]}
       />
       
       <DynamicLighting donationAmount={donationAmount} />
@@ -88,7 +88,7 @@ export function CompactImpactVisualizer() {
       let currentValue = 0;
       
       const animate = () => {
-        currentValue += direction * 1; // Speed of animation
+        currentValue += direction * 1.5; // Speed of animation
         
         // Reverse direction at bounds
         if (currentValue >= 800) {

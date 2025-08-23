@@ -72,7 +72,7 @@ function StationerySet({ visible }: { visible: boolean }) {
   return (
     <primitive 
       object={clonedScene} 
-      position={[-0.1, 0.55, 0.1]}
+      position={[-0.1, 0.55, 0.2]}
       scale={[1, 1, 1]}
       rotation={[0, Math.PI / 4, 0]}
     />
@@ -91,7 +91,7 @@ function BooksAndWorksheets({ visible }: { visible: boolean }) {
   return (
     <primitive 
       object={clonedScene} 
-      position={[0.3, 0.55, 0.1]}
+      position={[0.2, 0.55, 0.15]}
       scale={[0.3, 0.3, 0.3]}
       rotation={[0, -Math.PI / 6, 0]}
     />
@@ -127,33 +127,23 @@ function LunchSet({ visible }: { visible: boolean }) {
   );
 }
 
-// Placeholder for educational learning kit (HKD 500-800)
+// Educational learning kit (HKD 500-800) - Using laptop model
 function LearningKit({ visible }: { visible: boolean }) {
+  const { scene } = useGLTF('/models/Laptop.glb');
+  
+  
   if (!visible) return null;
   
+  // Clone the scene to avoid conflicts
+  const clonedScene = scene.clone();
+  
   return (
-    <group position={[0.3, 0.55, -0.2]}>
-      {/* Counting blocks */}
-      <Box args={[0.04, 0.04, 0.04]} position={[0, 0.02, 0]}>
-        <meshStandardMaterial color="#FF0000" />
-      </Box>
-      <Box args={[0.04, 0.04, 0.04]} position={[0.05, 0.02, 0]}>
-        <meshStandardMaterial color="#00FF00" />
-      </Box>
-      <Box args={[0.04, 0.04, 0.04]} position={[0.1, 0.02, 0]}>
-        <meshStandardMaterial color="#0000FF" />
-      </Box>
-      
-      {/* Alphabet cards (simplified) */}
-      <Box args={[0.08, 0.001, 0.12]} position={[0, 0.06, 0.1]}>
-        <meshStandardMaterial color="#FFFF00" />
-      </Box>
-      
-      {/* Puzzle piece placeholder */}
-      <Cylinder args={[0.05, 0.05, 0.01]} position={[-0.05, 0.04, 0.1]} rotation={[Math.PI / 2, 0, 0]}>
-        <meshStandardMaterial color="#9370DB" />
-      </Cylinder>
-    </group>
+    <primitive 
+      object={clonedScene} 
+      position={[0.1, 0.55, -0.2]}
+      scale={[1, 1, 1]}
+      rotation={[0, -Math.PI *1.2, 0]}
+    />
   );
 }
 
@@ -168,6 +158,16 @@ function ClassroomBackground() {
       
       {/* Back wall */}
       <Box args={[10, 5, 0.1]} position={[0, 2.5, -3]}>
+        <meshStandardMaterial color="#F0E68C" />
+      </Box>
+      
+      {/* Left wall */}
+      <Box args={[0.1, 5, 10]} position={[-3, 2.5, 0]}>
+        <meshStandardMaterial color="#F0E68C" />
+      </Box>
+      
+      {/* Right wall */}
+      <Box args={[0.1, 5, 10]} position={[3, 2.5, 0]}>
         <meshStandardMaterial color="#F0E68C" />
       </Box>
       
