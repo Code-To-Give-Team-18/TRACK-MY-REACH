@@ -90,6 +90,34 @@ async def get_posts_by_child(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error retrieving posts: {str(e)}")
 
 ############################
+# Get posts by region 
+############################
+@router.get("/region/{region_id}", response_model=PaginatedPosts)
+async def get_posts_by_region(
+    region_id: str,
+    page: int = Query(1, gt=0),
+    limit: int = Query(10, gt=0, le=50),
+):
+    try:
+        offset = (page - 1) * limit
+        fetch_n = limit + 1  # sentinel fetch to compute has_next
+
+        # Try model methods that might support offset
+        try:
+            results = Posts.get_posts_by_region(region_id, limit=fetch_n, offset=offset)
+        except TypeError:
+            # Fallback: fetch more and slice
+            bulk = Posts.get_posts_by_region(region_id, limit=offset + fetch_n)
+            results = bulk[offset: offset + fetch_n]
+
+        has_next = len(results) > limit
+        items = results[:limit]
+        return PaginatedPosts(items=items, page=page, limit=limit, has_next=has_next)
+    except Exception as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error retrieving posts: {str(e)}")
+
+
+############################
 # Get posts 
 ############################
 @router.get("/", response_model=PaginatedPosts)
