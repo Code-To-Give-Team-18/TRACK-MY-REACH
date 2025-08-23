@@ -19,11 +19,15 @@ export const StoryPage = () => {
     fetchPost(1, 10);
   }, []);
 
+  // bug the first post does not show
   return (
-    <div className="flex flex-col justify-center items-center">
+    <div className="flex flex-col justify-center items-center overflow-y-scroll snap-y snap-mandatory" style={{
+      height: "calc(100dvh - 80px)"
+    }}>
       {posts.map((post) => {
         return <PostCard post={post} key={post.id}/>
       })}
     </div>
   );
 }
+

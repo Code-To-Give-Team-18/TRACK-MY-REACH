@@ -3,17 +3,38 @@
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { ChildInfo } from "./components/ChildInfo";
-import { ChildProvider } from "./contexts/ChildContext";
-import { useState } from "react";
-import { Post } from "../stories/components/PostCard";
+import { ChildProvider, useChildContext } from "./contexts/ChildContext";
+import { useEffect, useState } from "react";
+import { Post, PostCard } from "../stories/components/PostCard";
 
 const Posts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
-  if (posts.length === 0) return <div>No posts</div>
+  const { child } = useChildContext();
+
+  const fetchPost = async (pageNumber: number, pageSize: number) => {
+    const response = await fetch(`http://localhost:8080/api/v1/posts/child/${child?.id}?page=${pageNumber}&limit=${pageSize}`, {
+      method: "GET"
+    });
+    const page = await response.json();
+    const newPosts = [...posts, ...page.items];
+    setPosts(newPosts);
+  }
+
+  useEffect(() => {
+    if (!child) return;
+
+    fetchPost(1, 10);
+  }, [child]);
+
+  if (!child) return;
 
   return (
-    <div>
-      TODO: Post feed
+    <div className="flex flex-col justify-center items-center overflow-y-scroll snap-y snap-mandatory" style={{
+      height: "calc(100dvh - 80px)"
+    }}>
+      {posts.map((post) => {
+        return <PostCard post={post} key={post.id}/>
+      })}
     </div>
   );
 }
@@ -67,11 +88,8 @@ export const ChildPage = () => {
           <ChildInfo/>
         </div>
         <FanClub/>
-
-        <div className="flex flex-col justify-center">
-          <Posts/>
-        </div>
       </div>
+      <Posts/>
     </ChildProvider>
   );
 }
