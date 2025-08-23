@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Path, Query
 from typing import List, Optional
 from pydantic import BaseModel
 
-from apps.webui.models.followers import Followers
+from apps.webui.models.followers import Followers 
 from utils.utils import get_current_user
 
 router = APIRouter()

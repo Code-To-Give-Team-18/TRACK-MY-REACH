@@ -6,7 +6,8 @@ from pydantic import BaseModel
 from apps.webui.models.posts import Posts
 from apps.webui.models.posts_schemas import PostCreateRequest, PostResponse
 from utils.utils import get_current_user
-
+import apps.webui.models.followers as followers_models
+from peewee import fn
 router = APIRouter()
 
 class SortOrder(str, Enum):
@@ -116,44 +117,6 @@ async def get_posts_by_region(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error retrieving posts: {str(e)}")
 
 ############################
-# Get posts 
-############################
-@router.get("/", response_model=PaginatedPosts)
-async def get_posts(
-    sort: SortOrder = Query(SortOrder.recent, description="Sort by 'recent' or 'likes'"),
-    page: int = Query(1, gt=0),
-    limit: int = Query(20, gt=0, le=50, description="Number of posts per page"),
-):
-    try:
-        offset = (page - 1) * limit
-        fetch_n = limit + 1
-
-        if sort == SortOrder.recent:
-            # Try offset-aware call first
-            try:
-                results = Posts.get_all_posts(limit=fetch_n, offset=offset)
-            except TypeError:
-                # Fallback: fetch & slice
-                bulk = Posts.get_all_posts(limit=offset + fetch_n)
-                results = bulk[offset: offset + fetch_n]
-
-        elif sort == SortOrder.likes:
-            # Try offset-aware trending
-            try:
-                results = Posts.get_trending_posts(days=365, limit=fetch_n, offset=offset)
-            except TypeError:
-                bulk = Posts.get_trending_posts(days=365, limit=offset + fetch_n)
-                results = bulk[offset: offset + fetch_n]
-        else:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid sort parameter")
-
-        has_next = len(results) > limit
-        items = results[:limit]
-        return PaginatedPosts(items=items, page=page, limit=limit, has_next=has_next)
-    except Exception as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error retrieving posts: {str(e)}")
-
-############################
 # Delete Post 
 ############################
 @router.delete("/{post_id}", response_model=bool)
@@ -174,3 +137,90 @@ async def delete_post(post_id: str, user=Depends(get_current_user)):
         raise
     except Exception as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error deleting post: {str(e)}")
+    
+############################
+# Get Posts
+############################
+
+@router.get("/", response_model=PaginatedPosts, response_model_exclude_none=True)
+async def get_posts(
+    sort: SortOrder = Query(SortOrder.recent, description="Sort by 'recent' or 'likes'"),
+    page: int = Query(1, gt=0),
+    limit: int = Query(20, gt=0, le=50, description="Number of posts per page"),
+    user_id: Optional[str] = Query(None, alias="userId", description="If provided, include follow_status per post"),
+):
+    try:
+        offset = (page - 1) * limit
+        fetch_n = limit + 1
+
+        if sort == SortOrder.recent:
+            try:
+                results = Posts.get_all_posts(limit=fetch_n, offset=offset)
+            except TypeError:
+                bulk = Posts.get_all_posts(limit=offset + fetch_n)
+                results = bulk[offset: offset + fetch_n]
+        elif sort == SortOrder.likes:
+            try:
+                results = Posts.get_trending_posts(days=365, limit=fetch_n, offset=offset)
+            except TypeError:
+                bulk = Posts.get_trending_posts(days=365, limit=offset + fetch_n)
+                results = bulk[offset: offset + fetch_n]
+        else:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid sort parameter")
+
+        has_next = len(results) > limit
+        items = results[:limit]
+
+        # Enrich with follow_status only when userId is supplied
+        if user_id:
+            uid_norm = str(user_id).strip().lower()
+            child_ids = {p.get("child_id") for p in items if p.get("child_id")}
+            if child_ids:
+                # Normalize DB columns (trim + remove CR/LF + NBSP + ZWSP) and compare lowercase
+                norm_user_col = fn.lower(
+                    fn.replace(
+                        fn.replace(
+                            fn.replace(
+                                fn.replace(fn.trim(followers_models.Follower.user_id), '\r', ''),
+                                '\n', ''
+                            ),
+                            '\u00A0', ''  # NBSP
+                        ),
+                        '\u200B', ''    # zero-width space
+                    )
+                )
+                norm_child_col = fn.lower(
+                    fn.replace(
+                        fn.replace(
+                            fn.replace(
+                                fn.replace(fn.trim(followers_models.Follower.child_id), '\r', ''),
+                                '\n', ''
+                            ),
+                            '\u00A0', ''
+                        ),
+                        '\u200B', ''
+                    )
+                )
+
+                norm_child_ids = [str(cid).strip().lower() for cid in child_ids]
+
+                rows = (
+                    followers_models.Follower
+                    .select(followers_models.Follower.child_id)
+                    .where(
+                        (norm_user_col == uid_norm) &
+                        (norm_child_col.in_(norm_child_ids))
+                    )
+                )
+
+                followed_set_norm = {str(r.child_id).strip().lower() for r in rows}
+
+                for p in items:
+                    cid = p.get("child_id")
+                    if cid is not None:
+                        p["follow_status"] = (str(cid).strip().lower() in followed_set_norm)
+
+        return PaginatedPosts(items=items, page=page, limit=limit, has_next=has_next)
+
+    except Exception as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error retrieving posts: {str(e)}")
