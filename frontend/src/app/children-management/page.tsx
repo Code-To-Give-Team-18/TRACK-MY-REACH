@@ -10,16 +10,17 @@ import { regionsService, type Region } from '@/services/regions.service';
 type Child = {
   id: string;
   name: string;
-  age: number;
-  school: string;
+  age?: number;
+  school?: string;
   picture_link?: string;
   region_id: string;
   description?: string;
   bio?: string;
   video_link?: string;
+  follower_count?: number;
 };
 
-export default function AddChildrenPage() {
+export default function ChildrenManagementPage() {
   const [children, setChildren] = useState<Child[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,13 +48,13 @@ export default function AddChildrenPage() {
   async function fetchData() {
     try {
       setLoading(true);
-      const [regionsData, childrenResponse] = await Promise.all([
+      const [regionsData, childrenData] = await Promise.all([
         regionsService.getRegions(),
-        childrenService.getChildren({ page: 1, limit: 100 })
+        childrenService.getAllChildren()
       ]);
       
       setRegions(regionsData);
-      setChildren(childrenResponse?.items || []);
+      setChildren(childrenData || []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -146,7 +147,7 @@ export default function AddChildrenPage() {
           transition={{ duration: 0.5 }}
         >
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-800">Manage Children</h1>
+            <h1 className="text-4xl font-bold text-gray-800">Children Management</h1>
             <button
               onClick={() => setShowForm(!showForm)}
               className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-200"
@@ -411,8 +412,8 @@ export default function AddChildrenPage() {
                         </div>
                       )}
                       <h3 className="font-semibold text-lg">{child.name}</h3>
-                      <p className="text-gray-600">Age: {child.age}</p>
-                      <p className="text-gray-600">School: {child.school}</p>
+                      {child.age && <p className="text-gray-600">Age: {child.age}</p>}
+                      {child.school && <p className="text-gray-600">School: {child.school}</p>}
                       <p className="text-gray-600">Region: {region?.name || 'Unknown'}</p>
                       {child.description && (
                         <p className="text-gray-500 text-sm mt-2">{child.description}</p>
