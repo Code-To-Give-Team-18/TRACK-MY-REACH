@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
 import { DeskScene } from '@/components/digital-twin-v2/DeskScene';
@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import * as THREE from 'three';
 import { useRouter } from 'next/navigation';
+import { ErrorBoundary } from 'react-error-boundary';
+import { preloadModels } from '@/components/digital-twin-v2/preloadModels';
 
 function DynamicLighting({ donationAmount }: { donationAmount: number }) {
   const lightIntensity = Math.min(1 + donationAmount / 200, 2.5);
@@ -38,21 +40,31 @@ function DynamicLighting({ donationAmount }: { donationAmount: number }) {
   );
 }
 
-function ClassroomScene({ donationAmount }: { donationAmount: number }) {
+const ClassroomScene = React.memo(({ donationAmount }: { donationAmount: number }) => {
+  // Memoize Canvas props to prevent unnecessary re-renders
+  const canvasProps = useMemo(() => ({
+    shadows: "soft" as const,
+    dpr: [1, 1.5] as [number, number],
+    gl: {
+      antialias: false,
+      powerPreference: "high-performance" as const,
+      alpha: false,
+      stencil: false,
+      depth: true,
+      failIfMajorPerformanceCaveat: false,
+      preserveDrawingBuffer: false
+    },
+    camera: { position: [0, 1.2, 2] as [number, number, number], fov: 45 },
+    performance: { min: 0.5 },
+    frameloop: "demand" as const,
+    onCreated: ({ gl }) => {
+      gl.toneMapping = THREE.ACESFilmicToneMapping;
+      gl.outputColorSpace = THREE.SRGBColorSpace;
+    }
+  }), []);
+
   return (
-    <Canvas
-      shadows="soft"
-      dpr={[1, 1.5]}
-      gl={{
-        antialias: false,
-        powerPreference: "high-performance",
-        alpha: false,
-        stencil: false,
-        depth: true
-      }}
-      camera={{ position: [0, 1.2, 2], fov: 45 }}
-      performance={{ min: 0.5 }}
-    >
+    <Canvas {...canvasProps}>
       <fog attach="fog" args={['#f0f0f0', 5, 15]} />
       
       <OrbitControls
@@ -65,6 +77,7 @@ function ClassroomScene({ donationAmount }: { donationAmount: number }) {
         autoRotate
         autoRotateSpeed={0.3}
         target={[0, 0.4, 0]}
+        makeDefault
       />
       
       <DynamicLighting donationAmount={donationAmount} />
@@ -73,34 +86,45 @@ function ClassroomScene({ donationAmount }: { donationAmount: number }) {
       <DeskScene donationAmount={donationAmount} />
     </Canvas>
   );
+});
+
+// Error fallback component
+function Scene3DErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-white p-4">
+      <p className="text-lg mb-2">3D visualization temporarily unavailable</p>
+      <p className="text-sm text-gray-400 mb-4">Your device may not support WebGL</p>
+      <button
+        onClick={resetErrorBoundary}
+        className="px-4 py-2 bg-blue-500 rounded hover:bg-blue-600 transition"
+      >
+        Try Again
+      </button>
+    </div>
+  );
 }
 
 export function CompactImpactVisualizer() {
   const [donationAmount, setDonationAmount] = useState(0);
   const [userInteracted, setUserInteracted] = useState(false);
+  const [debouncedAmount, setDebouncedAmount] = useState(0);
   const animationRef = useRef<number>();
+  const debounceRef = useRef<NodeJS.Timeout>();
   const router = useRouter();
+  
+  // Preload models on component mount
+  useEffect(() => {
+    preloadModels();
+  }, []);
   
   const quickAmounts = [50, 150, 300, 500, 800];
   
   // Auto-animate slider until user interaction
   useEffect(() => {
     if (!userInteracted) {
-      let direction = 1;
-      let currentValue = 500;
+      const currentValue = 500;
       
       const animate = () => {
-        // currentValue += direction * 1.5; // Speed of animation
-        
-        // // Reverse direction at bounds
-        // if (currentValue >= 800) {
-        //   currentValue = 800;
-        //   direction = -1;
-        // } else if (currentValue <= 0) {
-        //   currentValue = 0;
-        //   direction = 1;
-        // }
-        
         setDonationAmount(currentValue);
         animationRef.current = requestAnimationFrame(animate);
       };
@@ -115,13 +139,30 @@ export function CompactImpactVisualizer() {
     }
   }, [userInteracted]);
   
-  const handleUserInteraction = (value: number) => {
+  // Debounce the 3D scene updates to prevent rapid re-renders
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    debounceRef.current = setTimeout(() => {
+      setDebouncedAmount(donationAmount);
+    }, 100); // Delay 3D updates by 100ms
+    
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [donationAmount]);
+  
+  const handleUserInteraction = useCallback((value: number) => {
     setUserInteracted(true);
     setDonationAmount(value);
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
-  };
+  }, []);
   
   const getTierName = (amount: number) => {
     if (amount === 0) return 'Empty Desk';
@@ -177,13 +218,18 @@ export function CompactImpactVisualizer() {
         <div className="grid lg:grid-cols-2 gap-8 items-start">
           {/* 3D Visualization */}
           <div className="relative h-[500px] bg-gray-900 rounded-2xl overflow-hidden shadow-2xl">
-            <Suspense fallback={
-              <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                <div className="text-white text-lg">Loading visualization...</div>
-              </div>
-            }>
-              <ClassroomScene donationAmount={donationAmount} />
-            </Suspense>
+            <ErrorBoundary
+              FallbackComponent={Scene3DErrorFallback}
+              onReset={() => window.location.reload()}
+            >
+              <Suspense fallback={
+                <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                  <div className="text-white text-lg">Loading visualization...</div>
+                </div>
+              }>
+                <ClassroomScene donationAmount={debouncedAmount} />
+              </Suspense>
+            </ErrorBoundary>
             
             {/* Overlay Badge */}
             <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-md rounded-lg px-4 py-2">
