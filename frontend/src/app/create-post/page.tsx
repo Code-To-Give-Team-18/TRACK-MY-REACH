@@ -32,6 +32,12 @@ export default function CreatePostPage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  
+  // Video upload states
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [useVideoFile, setUseVideoFile] = useState(true); // Toggle between file upload and URL
 
   // Fetch children on component mount
   useEffect(() => {
@@ -86,6 +92,39 @@ export default function CreatePostPage() {
     setImagePreview(null);
   };
 
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('video/')) {
+        setMessage('Please select a valid video file');
+        setMessageType('error');
+        return;
+      }
+      
+      // Validate file size (max 100MB)
+      if (file.size > 100 * 1024 * 1024) {
+        setMessage('Video size should be less than 100MB');
+        setMessageType('error');
+        return;
+      }
+
+      setSelectedVideo(file);
+      
+      // Create preview URL
+      const videoUrl = URL.createObjectURL(file);
+      setVideoPreview(videoUrl);
+    }
+  };
+
+  const removeVideo = () => {
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setSelectedVideo(null);
+    setVideoPreview(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -100,6 +139,7 @@ export default function CreatePostPage() {
     
     try {
       let pictureLink: string | undefined;
+      let videoLinkFinal: string | undefined;
       
       // Upload image if selected
       if (selectedImage) {
@@ -117,6 +157,25 @@ export default function CreatePostPage() {
           setUploadingImage(false);
         }
       }
+      
+      // Upload video if selected
+      if (useVideoFile && selectedVideo) {
+        setMessage('Uploading video...');
+        setUploadingVideo(true);
+        try {
+          const uploadResponse = await fileService.uploadVideo(selectedVideo);
+          // Construct the streaming URL for the uploaded video
+          videoLinkFinal = `/api/v1/files/video/${uploadResponse.id}/stream`;
+        } catch (uploadError) {
+          console.error('Error uploading video:', uploadError);
+          setMessage('Failed to upload video, but continuing with post creation...');
+          setMessageType('error');
+        } finally {
+          setUploadingVideo(false);
+        }
+      } else if (!useVideoFile && videoLink) {
+        videoLinkFinal = videoLink;
+      }
 
       // Create the post
       setMessage('Creating post...');
@@ -124,7 +183,7 @@ export default function CreatePostPage() {
         child_id: selectedChildId,
         caption,
         picture_link: pictureLink,
-        video_link: videoLink || undefined,
+        video_link: videoLinkFinal,
       };
 
       await postService.createPost(postData);
@@ -137,6 +196,11 @@ export default function CreatePostPage() {
       setVideoLink('');
       setSelectedImage(null);
       setImagePreview(null);
+      setSelectedVideo(null);
+      if (videoPreview) {
+        URL.revokeObjectURL(videoPreview);
+      }
+      setVideoPreview(null);
       
       // Redirect after a short delay
       setTimeout(() => {
@@ -150,6 +214,7 @@ export default function CreatePostPage() {
     } finally {
       setLoading(false);
       setUploadingImage(false);
+      setUploadingVideo(false);
     }
   };
 
@@ -296,22 +361,103 @@ export default function CreatePostPage() {
               )}
             </div>
 
-            {/* Video Link (Optional) */}
+            {/* Video Upload or Link (Optional) */}
             <div>
               <label className="block font-medium mb-2 text-gray-700">
                 <Video className="w-4 h-4 inline mr-1" />
-                Video Link (Optional)
+                Video (Optional)
               </label>
-              <input
-                type="url"
-                className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                value={videoLink}
-                onChange={e => setVideoLink(e.target.value)}
-                placeholder="https://youtube.com/watch?v=... or other video URL"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Add a YouTube or other video link to include with the post
-              </p>
+              
+              {/* Toggle between file upload and URL */}
+              <div className="flex gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseVideoFile(true);
+                    setVideoLink('');
+                  }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    useVideoFile 
+                      ? 'bg-orange-500 text-white' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Upload Video File
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseVideoFile(false);
+                    removeVideo();
+                  }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    !useVideoFile 
+                      ? 'bg-orange-500 text-white' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Use Video URL
+                </button>
+              </div>
+              
+              {useVideoFile ? (
+                // Video file upload
+                !videoPreview ? (
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={handleVideoSelect}
+                      className="hidden"
+                      id="video-upload"
+                    />
+                    <label
+                      htmlFor="video-upload"
+                      className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-orange-500 cursor-pointer transition-colors bg-gray-50 hover:bg-orange-50"
+                    >
+                      <div className="text-center">
+                        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-600">Click to upload a video</p>
+                        <p className="text-sm text-gray-500 mt-1">MP4, WebM, MOV up to 100MB</p>
+                      </div>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="relative rounded-xl overflow-hidden border">
+                    <video
+                      src={videoPreview}
+                      controls
+                      className="w-full h-64 bg-black"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeVideo}
+                      className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    {selectedVideo && (
+                      <div className="p-2 bg-gray-100 text-sm text-gray-600">
+                        {selectedVideo.name} ({(selectedVideo.size / 1024 / 1024).toFixed(2)} MB)
+                      </div>
+                    )}
+                  </div>
+                )
+              ) : (
+                // Video URL input
+                <>
+                  <input
+                    type="url"
+                    className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    value={videoLink}
+                    onChange={e => setVideoLink(e.target.value)}
+                    placeholder="https://youtube.com/watch?v=... or other video URL"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Add a YouTube or other video link to include with the post
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Submit Button */}
@@ -320,7 +466,7 @@ export default function CreatePostPage() {
               className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white py-4 text-lg font-semibold rounded-xl transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               disabled={loading || loadingChildren || children.length === 0}
             >
-              {uploadingImage ? 'Uploading Image...' : loading ? 'Creating Post...' : 'Create Post'}
+              {uploadingImage ? 'Uploading Image...' : uploadingVideo ? 'Uploading Video...' : loading ? 'Creating Post...' : 'Create Post'}
             </button>
 
             {/* Message Display */}
