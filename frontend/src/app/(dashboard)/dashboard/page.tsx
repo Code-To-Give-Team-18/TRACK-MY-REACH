@@ -106,6 +106,25 @@ export default function DashboardPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {user.role === 'admin' && (
+              <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg border-2 border-indigo-500">
+                <div className="px-4 py-5 sm:p-6">
+                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                    Admin Panel
+                  </dt>
+                  <dd className="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">
+                    👥
+                  </dd>
+                  <Button
+                    onClick={() => router.push('/admin/users')}
+                    className="mt-3 w-full text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    Manage Users
+                  </Button>
+                </div>
+              </div>
+            )}
+            
             <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
