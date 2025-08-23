@@ -80,59 +80,27 @@ export default function DashboardPage() {
                 </Button>
               </div>
               <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg border-2 border-pink-400 flex flex-col items-center p-8">
-                <span className="text-xl font-semibold text-pink-600 mb-2">Add Children</span>
+                <span className="text-xl font-semibold text-pink-600 mb-2">Children Management</span>
                 <span className="text-4xl mb-4">🧒</span>
                 <Button
-                  onClick={() => router.push('/add-children')}
+                  onClick={() => router.push('/children-management')}
                   className="w-full text-sm bg-pink-500 hover:bg-pink-600 text-white rounded-full"
                 >
-                  Add Children
+                  Manage Children
                 </Button>
               </div>
               <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg border-2 border-purple-400 flex flex-col items-center p-8">
-                <span className="text-xl font-semibold text-purple-600 mb-2">Create Post</span>
+                <span className="text-xl font-semibold text-purple-600 mb-2">Post Management</span>
                 <span className="text-4xl mb-4">📝</span>
                 <Button
-                  onClick={() => router.push('/create-post')}
+                  onClick={() => router.push('/post-management')}
                   className="w-full text-sm bg-purple-500 hover:bg-purple-600 text-white rounded-full"
                 >
-                  Create Post
+                  Manage Posts
                 </Button>
               </div>
             </>
           )}
-
-          <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg flex flex-col items-center p-8">
-            <span className="text-xl font-semibold text-pink-600 mb-2">Profile</span>
-            <span className="text-4xl mb-4">✓</span>
-            <Button
-              onClick={() => router.push('/profile')}
-              className="w-full text-sm bg-pink-500 hover:bg-pink-600 text-white rounded-full"
-            >
-              View Profile
-            </Button>
-          </div>
-
-          <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg flex flex-col items-center p-8">
-            <span className="text-xl font-semibold text-purple-600 mb-2">Settings</span>
-            <span className="text-4xl mb-4">⚙️</span>
-            <Button
-              onClick={() => router.push('/settings')}
-              className="w-full text-sm bg-purple-500 hover:bg-purple-600 text-white rounded-full"
-            >
-              Manage Settings
-            </Button>
-          </div>
-
-          <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg flex flex-col items-center p-8">
-            <span className="text-xl font-semibold text-orange-600 mb-2">Files</span>
-            <span className="text-4xl mb-4">📁</span>
-            <Button
-              className="w-full text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-full"
-            >
-              Manage Files
-            </Button>
-          </div>
         </div>
       </div>
     </section>
