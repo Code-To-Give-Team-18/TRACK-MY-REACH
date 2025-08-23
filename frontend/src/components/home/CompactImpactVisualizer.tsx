@@ -85,6 +85,7 @@ export function CompactImpactVisualizer() {
   useEffect(() => {
     if (!userInteracted) {
       let direction = 1;
+      let currentValue = 0;
       
       const animate = () => {
         currentValue += direction * 1; // Speed of animation
