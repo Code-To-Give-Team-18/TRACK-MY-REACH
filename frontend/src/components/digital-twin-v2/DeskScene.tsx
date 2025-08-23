@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Box, Sphere, Cylinder } from '@react-three/drei';
+import { Box, Sphere, Cylinder, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface DeskSceneProps {
@@ -60,105 +60,90 @@ function DeskPlaceholder() {
   );
 }
 
-// Placeholder for stationery set (HKD 50-80)
+// Stationery set (HKD 50-80) - Using real model
 function StationerySet({ visible }: { visible: boolean }) {
+  const { scene } = useGLTF('/models/stationary.glb');
+  
   if (!visible) return null;
   
+  // Clone the scene to avoid conflicts
+  const clonedScene = scene.clone();
+  
   return (
-    <group position={[-0.3, 0.55, 0.1]}>
-      {/* Pencil case */}
-      <Box args={[0.2, 0.05, 0.1]}>
-        <meshStandardMaterial color="#FF69B4" />
-      </Box>
-      {/* Pencils (simplified) */}
-      <Cylinder args={[0.01, 0.01, 0.15]} position={[0.05, 0.08, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <meshStandardMaterial color="#FFFF00" />
-      </Cylinder>
-      <Cylinder args={[0.01, 0.01, 0.15]} position={[0.05, 0.08, 0.02]} rotation={[0, 0, Math.PI / 2]}>
-        <meshStandardMaterial color="#00FF00" />
-      </Cylinder>
-    </group>
+    <primitive 
+      object={clonedScene} 
+      position={[-0.1, 0.55, 0.2]}
+      scale={[1, 1, 1]}
+      rotation={[0, Math.PI / 4, 0]}
+    />
   );
 }
 
-// Placeholder for books and worksheets (HKD 150-200)
+// Books and worksheets (HKD 150-200) - Using real model
 function BooksAndWorksheets({ visible }: { visible: boolean }) {
+  const { scene } = useGLTF('/models/Book Stack.glb');
+  
   if (!visible) return null;
   
+  // Clone the scene to avoid conflicts
+  const clonedScene = scene.clone();
+  
   return (
-    <group position={[0.3, 0.55, 0.1]}>
-      {/* Stack of books */}
-      <Box args={[0.2, 0.03, 0.25]}>
-        <meshStandardMaterial color="#4169E1" />
-      </Box>
-      <Box args={[0.2, 0.03, 0.25]} position={[0, 0.03, 0]}>
-        <meshStandardMaterial color="#32CD32" />
-      </Box>
-      <Box args={[0.2, 0.03, 0.25]} position={[0, 0.06, 0]}>
-        <meshStandardMaterial color="#FF6347" />
-      </Box>
-    </group>
+    <primitive 
+      object={clonedScene} 
+      position={[0.2, 0.55, 0.15]}
+      scale={[0.3, 0.3, 0.3]}
+      rotation={[0, -Math.PI / 6, 0]}
+    />
   );
 }
 
-// Placeholder for lunch set (HKD 300-400)
+// Lunch set (HKD 300-400) - Using real model
 function LunchSet({ visible }: { visible: boolean }) {
-  if (!visible) return null;
+  const lunchRef = useRef<THREE.Group>(null);
+  const { scene } = useGLTF('/models/Ramen_lunch.glb');
   
-  const lunchboxRef = useRef<THREE.Mesh>(null);
-  
-  // Small animation for the lunchbox
+  // Small animation for the lunch - must be called unconditionally
   useFrame((state) => {
-    if (lunchboxRef.current) {
-      lunchboxRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+    if (lunchRef.current && visible) {
+      lunchRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
     }
   });
   
+  if (!visible) return null;
+  
+  // Clone the scene to avoid conflicts
+  const clonedScene = scene.clone();
+  
   return (
-    <group position={[-0.3, 0.55, -0.2]}>
-      {/* Lunchbox */}
-      <Box ref={lunchboxRef} args={[0.15, 0.08, 0.12]}>
-        <meshStandardMaterial color="#FFB6C1" />
-      </Box>
-      {/* Milk box */}
-      <Box args={[0.05, 0.08, 0.04]} position={[0.1, 0.04, 0]}>
-        <meshStandardMaterial color="#FFFFFF" />
-      </Box>
-      {/* Apple (simplified sphere) */}
-      <Sphere args={[0.03]} position={[0.1, 0.04, 0.08]}>
-        <meshStandardMaterial color="#FF0000" />
-      </Sphere>
+    <group ref={lunchRef}>
+      <primitive 
+        object={clonedScene} 
+        position={[-0.2, 0.55, -0.2]}
+        scale={[0.2, 0.2, 0.2]}
+        rotation={[0, Math.PI / 3, 0]}
+      />
     </group>
   );
 }
 
-// Placeholder for educational learning kit (HKD 500-800)
+// Educational learning kit (HKD 500-800) - Using laptop model
 function LearningKit({ visible }: { visible: boolean }) {
+  const { scene } = useGLTF('/models/Laptop.glb');
+  
+  
   if (!visible) return null;
   
+  // Clone the scene to avoid conflicts
+  const clonedScene = scene.clone();
+  
   return (
-    <group position={[0.3, 0.55, -0.2]}>
-      {/* Counting blocks */}
-      <Box args={[0.04, 0.04, 0.04]} position={[0, 0.02, 0]}>
-        <meshStandardMaterial color="#FF0000" />
-      </Box>
-      <Box args={[0.04, 0.04, 0.04]} position={[0.05, 0.02, 0]}>
-        <meshStandardMaterial color="#00FF00" />
-      </Box>
-      <Box args={[0.04, 0.04, 0.04]} position={[0.1, 0.02, 0]}>
-        <meshStandardMaterial color="#0000FF" />
-      </Box>
-      
-      {/* Alphabet cards (simplified) */}
-      <Box args={[0.08, 0.001, 0.12]} position={[0, 0.06, 0.1]}>
-        <meshStandardMaterial color="#FFFF00" />
-      </Box>
-      
-      {/* Puzzle piece placeholder */}
-      <Cylinder args={[0.05, 0.05, 0.01]} position={[-0.05, 0.04, 0.1]} rotation={[Math.PI / 2, 0, 0]}>
-        <meshStandardMaterial color="#9370DB" />
-      </Cylinder>
-    </group>
+    <primitive 
+      object={clonedScene} 
+      position={[0.1, 0.55, -0.2]}
+      scale={[1, 1, 1]}
+      rotation={[0, -Math.PI *1.2, 0]}
+    />
   );
 }
 
@@ -176,6 +161,16 @@ function ClassroomBackground() {
         <meshStandardMaterial color="#F0E68C" />
       </Box>
       
+      {/* Left wall */}
+      <Box args={[0.1, 5, 10]} position={[-3, 2.5, 0]}>
+        <meshStandardMaterial color="#F0E68C" />
+      </Box>
+      
+      {/* Right wall */}
+      <Box args={[0.1, 5, 10]} position={[3, 2.5, 0]}>
+        <meshStandardMaterial color="#F0E68C" />
+      </Box>
+      
       {/* Blackboard placeholder */}
       <Box args={[3, 1.5, 0.05]} position={[0, 2, -2.95]}>
         <meshStandardMaterial color="#2F4F2F" />
@@ -189,7 +184,7 @@ export function DeskScene({ donationAmount }: DeskSceneProps) {
     <group>
       <ClassroomBackground />
       <DeskPlaceholder />
-      <ChildPlaceholder />
+      {/* <ChildPlaceholder /> */}
       
       {/* Items appear based on donation amount (in HKD) */}
       <StationerySet visible={donationAmount >= 50} />

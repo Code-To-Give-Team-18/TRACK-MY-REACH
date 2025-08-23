@@ -208,12 +208,12 @@ export default function Header() {
         
                         {user.role === 'admin' && (
                           <Link
-                            href="add-children"
+                            href="/children-management"
                             onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
                           >
                             <HandHeart className="w-4 h-4 text-gray-600" />
-                            <span className="text-gray-700">Add Children</span>
+                            <span className="text-gray-700">Children Management</span>
                           </Link>
                         )}
 
@@ -333,12 +333,12 @@ export default function Header() {
         
                     {user.role === 'admin' && (
                       <Link
-                        href="/add-children"
+                        href="/children-management"
                         onClick={() => setIsUserMenuOpen(false)}
                         className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
                       >
                         <HandHeart className="w-4 h-4 text-gray-600" />
-                        <span className="text-gray-700">Add Children</span>
+                        <span className="text-gray-700">Children Management</span>
                       </Link>
                     )}
                     

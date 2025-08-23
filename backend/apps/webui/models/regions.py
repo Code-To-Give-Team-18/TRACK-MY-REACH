@@ -42,5 +42,34 @@ class RegionsTable:
 
     def delete_region(self, region_id: str) -> bool:
         return Region.delete().where(Region.id == region_id).execute() == 1
+    
+    def seed_default_regions(self):
+        """Seed default Hong Kong regions if they don't exist"""
+        default_regions = [
+            {'id': 'central', 'name': 'Central & Western'},
+            {'id': 'eastern', 'name': 'Eastern'},
+            {'id': 'southern', 'name': 'Southern'},
+            {'id': 'wan-chai', 'name': 'Wan Chai'},
+            {'id': 'kowloon-city', 'name': 'Kowloon City'},
+            {'id': 'kwun-tong', 'name': 'Kwun Tong'},
+            {'id': 'sham-shui-po', 'name': 'Sham Shui Po'},
+            {'id': 'wong-tai-sin', 'name': 'Wong Tai Sin'},
+            {'id': 'yau-tsim-mong', 'name': 'Yau Tsim Mong'},
+            {'id': 'islands', 'name': 'Islands'},
+            {'id': 'kwai-tsing', 'name': 'Kwai Tsing'},
+            {'id': 'north', 'name': 'North'},
+            {'id': 'sai-kung', 'name': 'Sai Kung'},
+            {'id': 'sha-tin', 'name': 'Sha Tin'},
+            {'id': 'tai-po', 'name': 'Tai Po'},
+            {'id': 'tsuen-wan', 'name': 'Tsuen Wan'},
+            {'id': 'tuen-mun', 'name': 'Tuen Mun'},
+            {'id': 'yuen-long', 'name': 'Yuen Long'},
+        ]
+        
+        for region_data in default_regions:
+            existing = Region.get_or_none(Region.id == region_data['id'])
+            if not existing:
+                Region.create(id=region_data['id'], name=region_data['name'])
 
 Regions = RegionsTable(DB)
+Regions.seed_default_regions()

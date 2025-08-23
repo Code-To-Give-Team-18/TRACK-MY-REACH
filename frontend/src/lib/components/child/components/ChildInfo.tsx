@@ -1,12 +1,9 @@
-import { Child } from "@/services/children.service";
 import Image from "next/image";
 import { DonateButton } from "./DonateButton";
+import { useChildContext } from "../contexts/ChildContext";
 
-interface ChildInfoProps {
-  child: Child;
-};
-
-export const ChildInfo: React.FC<ChildInfoProps> = ({ child }) => {
+export const ChildInfo: React.FC = () => {
+  const { child } = useChildContext();
   if (!child) return;
 
   return(
