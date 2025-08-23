@@ -9,6 +9,7 @@ import { useSpring, animated } from '@react-spring/three';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import * as THREE from 'three';
+import { useRouter } from 'next/navigation';
 
 function DynamicLighting({ donationAmount }: { donationAmount: number }) {
   const lightIntensity = Math.min(1 + donationAmount / 200, 2.5);
@@ -78,6 +79,7 @@ export function CompactImpactVisualizer() {
   const [donationAmount, setDonationAmount] = useState(0);
   const [userInteracted, setUserInteracted] = useState(false);
   const animationRef = useRef<number>();
+  const router = useRouter();
   
   const quickAmounts = [50, 150, 300, 500, 800];
   
@@ -148,6 +150,13 @@ export function CompactImpactVisualizer() {
     if (amount >= 500) items.push('🧩 Educational Learning Kit');
     if (amount >= 800) items.push('🌟 Complete Learning Setup');
     return items;
+  };
+
+  const handleDonateClick = () => {
+    if (donationAmount > 0) {
+      // Navigate to checkout with amount as quick donation
+      router.push(`/checkout?amount=${donationAmount}&mode=quick`);
+    }
   };
 
 
@@ -272,6 +281,7 @@ export function CompactImpactVisualizer() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={handleDonateClick}
                 className={`w-full py-3 rounded-lg font-medium text-white transition-all bg-gradient-to-r ${getTierColor(donationAmount)} shadow-lg`}
                 disabled={donationAmount === 0}
               >

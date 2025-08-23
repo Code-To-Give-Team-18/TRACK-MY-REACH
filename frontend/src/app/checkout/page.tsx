@@ -2,11 +2,12 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { StripePaymentForm } from '@/components/checkout/StripePaymentForm';
+import { CheckoutFlow } from '@/components/checkout/CheckoutFlow';
 import { HongKongMapOverhead } from '@/components/three/HongKongMapOverhead';
 import { RegionSelector } from '@/components/checkout/RegionSelector';
 import { StudentSelector } from '@/components/checkout/StudentSelector';
 import { Heart, Sparkles, TrendingUp } from 'lucide-react';
+import { DonationMode } from '@/components/checkout/DonationModeSelector';
 
 const regions = [
   { id: 'central', name: 'Central & Western', coordinates: [114.1544, 22.2824] as [number, number] },
@@ -36,15 +37,19 @@ export default function CheckoutPage() {
   const childId = searchParams.get('childId');
   const region = searchParams.get('region');
   const amount = searchParams.get('amount');
+  const mode = searchParams.get('mode') as DonationMode | null;
   
   const [selectedRegion, setSelectedRegion] = useState<string>('');
-  const [selectedStudent, setSelectedStudent] = useState<string>('let-us-choose');
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [donationAmount, setDonationAmount] = useState<number>(100);
   
   // Set initial values from URL parameters
   useEffect(() => {
     if (childId) {
       setSelectedStudent(childId);
+    } else if (mode === 'quick') {
+      // For quick donations, no child is selected
+      setSelectedStudent(null);
     }
     if (region) {
       setSelectedRegion(region);
@@ -55,12 +60,8 @@ export default function CheckoutPage() {
         setDonationAmount(parsedAmount);
       }
     }
-  }, [childId, region, amount]);
+  }, [childId, region, amount, mode]);
 
-  const handlePaymentSuccess = () => {
-    // Handle successful payment
-    console.log('Payment successful!');
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -81,15 +82,15 @@ export default function CheckoutPage() {
               <div className="flex items-center gap-2 mb-6">
                 <div className="h-1 w-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"></div>
                 <h2 className="text-xl font-bold text-gray-900">
-                  Secure Payment
+                  {mode === 'quick' ? 'Quick Donation' : 'Secure Payment'}
                 </h2>
               </div>
-              <StripePaymentForm
+              <CheckoutFlow
                 amount={donationAmount}
                 onAmountChange={setDonationAmount}
-                selectedRegion={selectedRegion}
-                selectedStudent={selectedStudent}
-                onSuccess={handlePaymentSuccess}
+                childId={selectedStudent}
+                regionId={selectedRegion}
+                mode={mode || 'guest'}
               />
             </div>
 
@@ -128,7 +129,8 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Right: Map and Student Selection */}
+          {/* Right: Map and Student Selection - Hide for quick donations */}
+          {mode !== 'quick' && (
           <div className="space-y-6">
             {/* Top Right: 3D Map and Region Selection */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-6 hover:shadow-2xl transition-shadow">
@@ -168,11 +170,12 @@ export default function CheckoutPage() {
               </div>
               <StudentSelector
                 selectedRegion={selectedRegion}
-                selectedStudent={selectedStudent}
+                selectedStudent={selectedStudent || 'let-us-choose'}
                 onStudentSelect={setSelectedStudent}
               />
             </div>
           </div>
+          )}
         </div>
       </div>
 
