@@ -6,7 +6,7 @@ import logging
 from peewee import *
 
 from apps.webui.models.users import UserModel, Users
-from utils.utils import verify_password
+from utils.utils import verify_password, get_password_hash
 
 from apps.webui.internal.db import DB
 
@@ -199,5 +199,45 @@ class AuthsTable:
         except:
             return False
 
+    def ensure_admin_user(self) -> bool:
+        """
+        Check if admin user exists, create it if not.
+        Admin email: admin@admin.com
+        Admin password: password123
+        """
+        admin_email = "admin@admin.com"
+        admin_password = "password123"
+        
+        try:
+            # Check if admin user already exists
+            existing_user = Users.get_user_by_email(admin_email)
+            if existing_user:
+                log.info(f"Admin user {admin_email} already exists")
+                return True
+            
+            # Create admin user if doesn't exist
+            hashed_password = get_password_hash(admin_password)
+            admin_user = self.insert_new_auth(
+                email=admin_email,
+                password=hashed_password,
+                name="Admin",
+                profile_image_url="/user.png",
+                role="admin"
+            )
+            
+            if admin_user:
+                log.info(f"Admin user {admin_email} created successfully")
+                return True
+            else:
+                log.error(f"Failed to create admin user {admin_email}")
+                return False
+                
+        except Exception as e:
+            log.error(f"Error ensuring admin user: {e}")
+            return False
+
 
 Auths = AuthsTable(DB)
+
+# Automatically ensure admin user exists when module loads
+Auths.ensure_admin_user()
