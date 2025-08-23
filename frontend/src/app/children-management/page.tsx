@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Plus, User, Calendar, School as SchoolIcon, MapPin, FileText, Video, Upload, X } from 'lucide-react';
 import { childrenService } from '@/services/children.service';
 import { regionsService, type Region } from '@/services/regions.service';
+import { fileService } from '@/services/file.service';
 
 type Child = {
   id: string;
@@ -27,6 +28,14 @@ export default function ChildrenManagementPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>('');
+  
+  // Video upload states
+  const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [useVideoFile, setUseVideoFile] = useState(true); // Toggle between file upload and URL
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -81,16 +90,48 @@ export default function ChildrenManagementPage() {
     
     try {
       setSubmitting(true);
+      
+      let pictureLink = formData.picture_link || '';
+      let videoLinkFinal = '';
+      
+      // Upload image if selected
+      if (selectedImage) {
+        setUploadingImage(true);
+        try {
+          const uploadResponse = await fileService.uploadFile(selectedImage);
+          pictureLink = `/api/v1/files/${uploadResponse.id}/content`;
+        } catch (error) {
+          console.error('Error uploading image:', error);
+        } finally {
+          setUploadingImage(false);
+        }
+      }
+      
+      // Upload video if selected
+      if (useVideoFile && selectedVideo) {
+        setUploadingVideo(true);
+        try {
+          const uploadResponse = await fileService.uploadVideo(selectedVideo);
+          videoLinkFinal = `/api/v1/files/video/${uploadResponse.id}/stream`;
+        } catch (error) {
+          console.error('Error uploading video:', error);
+        } finally {
+          setUploadingVideo(false);
+        }
+      } else if (!useVideoFile && formData.video_link) {
+        videoLinkFinal = formData.video_link;
+      }
+      
       await childrenService.createChild({
         name: formData.name,
         age: parseInt(formData.age),
         school: formData.school,
         region_id: formData.region_id,
-        picture_link: formData.picture_link || '',
+        picture_link: pictureLink,
         grade: '',
         description: formData.description || '',
         bio: formData.bio || '',
-        video_link: formData.video_link || '',
+        video_link: videoLinkFinal,
       });
 
       // Reset form
@@ -105,6 +146,12 @@ export default function ChildrenManagementPage() {
         picture_link: '',
       });
       setImagePreview('');
+      setSelectedImage(null);
+      setSelectedVideo(null);
+      if (videoPreview) {
+        URL.revokeObjectURL(videoPreview);
+      }
+      setVideoPreview(null);
       setShowForm(false);
       setErrors({});
       
@@ -120,6 +167,7 @@ export default function ChildrenManagementPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
@@ -128,6 +176,37 @@ export default function ChildrenManagementPage() {
       };
       reader.readAsDataURL(file);
     }
+  };
+  
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('video/')) {
+        alert('Please select a valid video file');
+        return;
+      }
+      
+      // Validate file size (max 100MB)
+      if (file.size > 100 * 1024 * 1024) {
+        alert('Video size should be less than 100MB');
+        return;
+      }
+
+      setSelectedVideo(file);
+      
+      // Create preview URL
+      const videoUrl = URL.createObjectURL(file);
+      setVideoPreview(videoUrl);
+    }
+  };
+
+  const removeVideo = () => {
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    setSelectedVideo(null);
+    setVideoPreview(null);
   };
 
   if (loading) {
@@ -291,19 +370,92 @@ export default function ChildrenManagementPage() {
                       />
                     </div>
 
-                    {/* Video Link Field */}
+                    {/* Video Upload or Link Field */}
                     <div>
                       <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                         <Video className="w-4 h-4" />
-                        Video Link
+                        Video
                       </label>
-                      <input
-                        type="url"
-                        value={formData.video_link}
-                        onChange={(e) => setFormData({ ...formData, video_link: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="https://example.com/video"
-                      />
+                      
+                      {/* Toggle between file upload and URL */}
+                      <div className="flex gap-2 mb-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUseVideoFile(true);
+                            setFormData({ ...formData, video_link: '' });
+                          }}
+                          className={`px-3 py-1 text-sm rounded-lg font-medium transition-colors ${
+                            useVideoFile 
+                              ? 'bg-blue-500 text-white' 
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Upload File
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUseVideoFile(false);
+                            removeVideo();
+                          }}
+                          className={`px-3 py-1 text-sm rounded-lg font-medium transition-colors ${
+                            !useVideoFile 
+                              ? 'bg-blue-500 text-white' 
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          Use URL
+                        </button>
+                      </div>
+                      
+                      {useVideoFile ? (
+                        // Video file upload
+                        !videoPreview ? (
+                          <label className="cursor-pointer block">
+                            <input
+                              type="file"
+                              accept="video/*"
+                              onChange={handleVideoSelect}
+                              className="hidden"
+                            />
+                            <div className="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 cursor-pointer transition-colors bg-gray-50 hover:bg-blue-50 text-center">
+                              <Upload className="w-6 h-6 text-gray-400 mx-auto mb-1" />
+                              <p className="text-sm text-gray-600">Click to upload video</p>
+                              <p className="text-xs text-gray-500">MP4, WebM up to 100MB</p>
+                            </div>
+                          </label>
+                        ) : (
+                          <div className="relative">
+                            <video
+                              src={videoPreview}
+                              controls
+                              className="w-full h-32 bg-black rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              onClick={removeVideo}
+                              className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                            {selectedVideo && (
+                              <p className="text-xs text-gray-600 mt-1">
+                                {selectedVideo.name} ({(selectedVideo.size / 1024 / 1024).toFixed(2)} MB)
+                              </p>
+                            )}
+                          </div>
+                        )
+                      ) : (
+                        // Video URL input
+                        <input
+                          type="url"
+                          value={formData.video_link}
+                          onChange={(e) => setFormData({ ...formData, video_link: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="https://youtube.com/watch?v=..."
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -336,6 +488,7 @@ export default function ChildrenManagementPage() {
                           type="button"
                           onClick={() => {
                             setImagePreview('');
+                            setSelectedImage(null);
                             setFormData({ ...formData, picture_link: '' });
                           }}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
@@ -364,6 +517,12 @@ export default function ChildrenManagementPage() {
                         picture_link: '',
                       });
                       setImagePreview('');
+                      setSelectedImage(null);
+                      setSelectedVideo(null);
+                      if (videoPreview) {
+                        URL.revokeObjectURL(videoPreview);
+                      }
+                      setVideoPreview(null);
                       setErrors({});
                     }}
                     className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -375,7 +534,7 @@ export default function ChildrenManagementPage() {
                     disabled={submitting}
                     className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50"
                   >
-                    {submitting ? 'Adding...' : 'Add Child'}
+                    {uploadingImage ? 'Uploading Image...' : uploadingVideo ? 'Uploading Video...' : submitting ? 'Adding...' : 'Add Child'}
                   </button>
                 </div>
               </form>
