@@ -39,9 +39,22 @@ export function ThemeProvider({
     root.classList.remove('dark');
     root.classList.add('light');
     
+    // Override any system preference or extension attempts
+    const observer = new MutationObserver(() => {
+      if (root.classList.contains('dark')) {
+        root.classList.remove('dark');
+        root.classList.add('light');
+      }
+    });
+    
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
     // Ignore theme changes and always use light
-    return;
-  }, [theme]);
+    return () => observer.disconnect();
+  }, []);
 
   const value = {
     theme: 'light' as Theme, // Always return 'light' as the current theme
