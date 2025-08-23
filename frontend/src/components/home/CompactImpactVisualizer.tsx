@@ -87,19 +87,19 @@ export function CompactImpactVisualizer() {
   useEffect(() => {
     if (!userInteracted) {
       let direction = 1;
-      let currentValue = 0;
+      let currentValue = 500;
       
       const animate = () => {
-        currentValue += direction * 1.5; // Speed of animation
+        // currentValue += direction * 1.5; // Speed of animation
         
-        // Reverse direction at bounds
-        if (currentValue >= 800) {
-          currentValue = 800;
-          direction = -1;
-        } else if (currentValue <= 0) {
-          currentValue = 0;
-          direction = 1;
-        }
+        // // Reverse direction at bounds
+        // if (currentValue >= 800) {
+        //   currentValue = 800;
+        //   direction = -1;
+        // } else if (currentValue <= 0) {
+        //   currentValue = 0;
+        //   direction = 1;
+        // }
         
         setDonationAmount(currentValue);
         animationRef.current = requestAnimationFrame(animate);
