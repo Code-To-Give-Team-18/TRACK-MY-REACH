@@ -83,10 +83,23 @@ class FollowersTable:
         }
 
     def is_following(self, user_id: str, child_id: str) -> bool:
-        """Check if a user is following a specific child"""
-        return Follower.select().where(
-            (Follower.user == user_id) & (Follower.child == child_id)
-        ).exists()
+        uid = str(user_id or "").strip()
+        cid = str(child_id or "").strip()
+        if not uid or not cid:
+            return False
+
+        # Normalize both sides in SQL: trim + remove CR/LF + NBSP (0xC2A0) + zero-width space (200B)
+        norm_user = fn.replace(fn.replace(fn.replace(fn.replace(fn.trim(Follower.user_id), '\r', ''), '\n', ''), '\u00A0', ''), '\u200B', '')
+        norm_child = fn.replace(fn.replace(fn.replace(fn.replace(fn.trim(Follower.child_id), '\r', ''), '\n', ''), '\u00A0', ''), '\u200B', '')
+
+        q = (Follower
+            .select(Follower.id)
+            .where(
+                (fn.lower(norm_user) == uid.lower()) &
+                (fn.lower(norm_child) == cid.lower())
+            )
+            .limit(1))
+        return q.exists()
 
     def get_user_following(self, user_id: str, limit: int = None) -> list:
         """Get all children that a user is following"""
