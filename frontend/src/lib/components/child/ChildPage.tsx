@@ -9,6 +9,8 @@ import { Post, PostCard } from "../stories/components/PostCard";
 
 const Posts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const { child } = useChildContext();
 
   const fetchPost = async (pageNumber: number, pageSize: number) => {
@@ -18,6 +20,8 @@ const Posts = () => {
     const page = await response.json();
     const newPosts = [...posts, ...page.items];
     setPosts(newPosts);
+    setPageNumber(pageNumber+1);
+    setHasMore(page.has_next);
   }
 
   useEffect(() => {
@@ -28,10 +32,18 @@ const Posts = () => {
 
   if (!child) return;
 
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 2000 && hasMore) {
+      fetchPost(pageNumber, 10);
+    }
+  };
+
   return (
-    <div className="flex flex-col justify-center items-center overflow-y-scroll snap-y snap-mandatory" style={{
-      height: "calc(100dvh - 80px)"
-    }}>
+    <div
+      className="flex flex-col overflow-y-scroll snap-y snap-mandatory h-full max-h-dvh"
+      onScroll={handleScroll}
+    >
       {posts.map((post) => {
         return <PostCard post={post} key={post.id}/>
       })}

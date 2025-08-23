@@ -15,10 +15,12 @@ export interface Post {
   video_link: string;
   likes: number;
   comments_count: number;
+  youtube_url: string;
   is_published: boolean;
   is_featured: boolean;
   created_at: string;
   updated_at: string;
+  follow_status: boolean | null;
 };
 
 interface PostCardProps {
