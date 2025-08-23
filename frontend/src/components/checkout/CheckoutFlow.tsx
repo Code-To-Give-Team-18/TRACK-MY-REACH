@@ -6,8 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth.store';
 import { donationService, DonationResponse } from '@/services/donation.service';
 import { DonationModeSelector, DonationMode } from './DonationModeSelector';
-import { AlertCircle, CheckCircle, Loader2, ArrowRight, Heart } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, ArrowRight, Heart, LogIn, UserX } from 'lucide-react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 interface CheckoutFlowProps {
   amount: number;
@@ -31,6 +32,7 @@ export function CheckoutFlow({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [donationResult, setDonationResult] = useState<DonationResponse | null>(null);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   
   // Payment details (would integrate with Stripe in production)
   const [paymentMethod, setPaymentMethod] = useState('card');
@@ -50,10 +52,14 @@ export function CheckoutFlow({
     // Set mode based on flow type and auth status
     if (isQuickFlow) {
       setDonationMode('quick');
+    } else if (!isAuthenticated && !isQuickFlow && childId) {
+      // Show auth prompt for non-quick donations when not logged in
+      setShowAuthPrompt(true);
+      setDonationMode('guest'); // Default to guest
     } else if (initialMode === 'standard' && !isAuthenticated) {
       setDonationMode('guest');
     }
-  }, [isQuickFlow, initialMode, isAuthenticated]);
+  }, [isQuickFlow, initialMode, isAuthenticated, childId]);
 
   const handleDonation = async () => {
     setIsProcessing(true);
@@ -160,8 +166,88 @@ export function CheckoutFlow({
 
   return (
     <div className="space-y-6">
+      {/* Authentication Prompt for Non-logged in Users */}
+      {showAuthPrompt && !isAuthenticated && !isQuickFlow && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">
+            How would you like to proceed?
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Sign in to track your donations and get tax receipts, or continue as a guest.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Sign In Option */}
+            <Link
+              href={`/auth/signin?redirect=/checkout?childId=${childId}&amount=${amount}`}
+              className="group"
+            >
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="p-4 bg-white rounded-lg border-2 border-blue-300 hover:border-blue-500 transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                    <LogIn className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900">Sign In</h4>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Track your impact & get receipts
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </Link>
+
+            {/* Continue as Guest Option */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setDonationMode('guest');
+                setShowAuthPrompt(false);
+              }}
+              className="p-4 bg-white rounded-lg border-2 border-purple-300 hover:border-purple-500 transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg hover:bg-purple-200 transition-colors">
+                  <UserX className="h-5 w-5 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">Continue as Guest</h4>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Donate anonymously without an account
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          <div className="mt-4 flex items-center justify-center">
+            <p className="text-xs text-gray-500">
+              Don't have an account?{' '}
+              <Link
+                href={`/auth/signup?redirect=/checkout?childId=${childId}&amount=${amount}`}
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Sign up here
+              </Link>
+            </p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Show donation form only after auth choice or if already authenticated */}
+      {(!showAuthPrompt || isAuthenticated || isQuickFlow) && (
+        <>
       {/* Donation Mode Selector */}
-      {!isQuickFlow && (
+      {!isQuickFlow && isAuthenticated && (
         <DonationModeSelector
           mode={donationMode}
           onModeChange={setDonationMode}
@@ -358,6 +444,8 @@ export function CheckoutFlow({
         <p>🔒 Secure payment powered by Stripe</p>
         <p className="mt-1">Your donation is tax-deductible</p>
       </div>
+      </>
+      )}
     </div>
   );
 }

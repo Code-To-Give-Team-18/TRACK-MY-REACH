@@ -7,7 +7,8 @@ const publicPaths = [
   '/forgot-password',
   '/reset-password',
   '/stories',
-  '/child'
+  '/child',
+  '/checkout'
 ];
 
 const authPaths = ['/login', '/signup'];
