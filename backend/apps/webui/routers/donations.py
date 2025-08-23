@@ -7,7 +7,55 @@ from utils.utils import get_current_user
 from apps.webui.models.donations import Donations, Donation
 from apps.webui.models.users import User
 
+from decimal import Decimal, ROUND_DOWN
+from pydantic import BaseModel, Field, validator
+from typing import List, Optional
+
 router = APIRouter()
+
+# =========================
+# Bulk split-donate (equal shares, rounded down)
+# =========================
+
+class BulkDonateIn(BaseModel):
+    amount: float = Field(..., gt=0)
+    child_ids: List[str] = Field(..., min_items=1)
+    user_id: Optional[str] = None
+    currency: Optional[str] = "HKD"
+    payment_method: Optional[str] = None
+    transaction_id: Optional[str] = None
+
+    @validator("child_ids")
+    def no_duplicates(cls, v):
+        if len(v) != len(set(v)):
+            raise ValueError("child_ids must not contain duplicates")
+        return v
+
+class DonationOut(BaseModel):  # reuse yours if already defined
+    id: str
+    user_id: Optional[str] = None
+    user_name: Optional[str] = None
+    child_id: Optional[str] = None
+    child_name: Optional[str] = None
+    region_id: Optional[str] = None
+    region_name: Optional[str] = None
+    amount: float
+    currency: str
+    donation_type: str
+    is_anonymous: bool
+    referral_code: Optional[str] = None
+    transaction_id: Optional[str] = None
+    payment_method: Optional[str] = None
+    status: str
+    created_at: Optional[str] = None
+
+class BulkDonateOut(BaseModel):
+    per_child_amount: float
+    total_requested: float
+    total_allocated: float
+    remainder_unallocated: float
+    donation_type: str
+    donations: List[DonationOut]
 
 # =========================
 # Schemas
@@ -147,7 +195,7 @@ def top_donors_total(k: int = Query(10, gt=0, le=100)):
         .where(
             (Donation.status == "completed") &
             Donation.user.is_null(False) &
-            (Donation.user_id != "0000")
+            (Donation.user_id != "0")
         )
         .group_by(Donation.user_id)
         .order_by(fn.SUM(Donation.amount).desc())
@@ -307,3 +355,52 @@ def recent_donors_by_child(child_id: str, k: int = Query(10, gt=0, le=100)):
         if len(out) >= k:
             break
     return out
+
+@router.post("/bulk/split", response_model=BulkDonateOut, status_code=status.HTTP_201_CREATED)
+def donate_to_all(body: BulkDonateIn):
+    """
+    Split `amount` equally across `child_ids`, each share rounded DOWN to 2dp.
+    If `user_id` is provided -> Standard donations; otherwise Guest (anonymous).
+    Any leftover remainder (from rounding down) is returned as unallocated.
+    """
+    try:
+        amount = Decimal(str(body.amount))
+        n = len(body.child_ids)
+
+        # per-child amount rounded DOWN to 2dp
+        raw_share = amount / Decimal(n)
+        per = raw_share.quantize(Decimal("0.01"), rounding=ROUND_DOWN)
+
+        if per <= Decimal("0.00"):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="per-child amount is 0.00 after rounding; increase amount")
+
+        total_allocated = per * Decimal(n)
+        remainder = (amount - total_allocated).max(Decimal("0.00"))
+
+        donation_type = "Standard" if body.user_id else "Guest"
+
+        created: List[DonationOut] = []
+        for cid in body.child_ids:
+            d = Donations.create_donation(
+                donation_type=donation_type,
+                user_id=body.user_id,            # None => Guest path in your model
+                child_id=cid,
+                amount=float(per),               # model converts to Decimal internally
+                currency=body.currency,
+                payment_method=body.payment_method,
+                transaction_id=body.transaction_id,
+            )
+            created.append(DonationOut(**d))
+
+        return BulkDonateOut(
+            per_child_amount=float(per),
+            total_requested=float(amount),
+            total_allocated=float(total_allocated),
+            remainder_unallocated=float(remainder),
+            donation_type=donation_type,
+            donations=created,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Bulk split donation failed: {e}")
