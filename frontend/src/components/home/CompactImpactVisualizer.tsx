@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
 import { DeskScene } from '@/components/digital-twin-v2/DeskScene';
@@ -76,8 +76,49 @@ function ClassroomScene({ donationAmount }: { donationAmount: number }) {
 
 export function CompactImpactVisualizer() {
   const [donationAmount, setDonationAmount] = useState(0);
+  const [userInteracted, setUserInteracted] = useState(false);
+  const animationRef = useRef<number>();
   
   const quickAmounts = [50, 150, 300, 500, 800];
+  
+  // Auto-animate slider until user interaction
+  useEffect(() => {
+    if (!userInteracted) {
+      let direction = 1;
+      
+      const animate = () => {
+        currentValue += direction * 1; // Speed of animation
+        
+        // Reverse direction at bounds
+        if (currentValue >= 800) {
+          currentValue = 800;
+          direction = -1;
+        } else if (currentValue <= 0) {
+          currentValue = 0;
+          direction = 1;
+        }
+        
+        setDonationAmount(currentValue);
+        animationRef.current = requestAnimationFrame(animate);
+      };
+      
+      animationRef.current = requestAnimationFrame(animate);
+      
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    }
+  }, [userInteracted]);
+  
+  const handleUserInteraction = (value: number) => {
+    setUserInteracted(true);
+    setDonationAmount(value);
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+  };
   
   const getTierName = (amount: number) => {
     if (amount === 0) return 'Empty Desk';
@@ -164,7 +205,7 @@ export function CompactImpactVisualizer() {
                 min="0"
                 max="1000"
                 value={donationAmount}
-                onChange={(e) => setDonationAmount(Number(e.target.value))}
+                onChange={(e) => handleUserInteraction(Number(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                 style={{
                   background: `linear-gradient(to right, rgb(59 130 246) 0%, rgb(59 130 246) ${(donationAmount / 1000) * 100}%, rgb(229 231 235) ${(donationAmount / 1000) * 100}%, rgb(229 231 235) 100%)`
@@ -183,7 +224,7 @@ export function CompactImpactVisualizer() {
                   key={amount}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setDonationAmount(amount)}
+                  onClick={() => handleUserInteraction(amount)}
                   className={`py-2 rounded-lg text-sm font-medium transition-all ${
                     donationAmount === amount
                       ? 'bg-blue-500 text-white'
