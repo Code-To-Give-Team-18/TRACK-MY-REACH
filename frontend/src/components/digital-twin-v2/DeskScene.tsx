@@ -184,7 +184,7 @@ export function DeskScene({ donationAmount }: DeskSceneProps) {
     <group>
       <ClassroomBackground />
       <DeskPlaceholder />
-      <ChildPlaceholder />
+      {/* <ChildPlaceholder /> */}
       
       {/* Items appear based on donation amount (in HKD) */}
       <StationerySet visible={donationAmount >= 50} />
