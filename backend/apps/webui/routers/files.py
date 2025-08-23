@@ -7,6 +7,7 @@ from fastapi import (
     UploadFile,
     File,
     Form,
+    Header,
 )
 
 
@@ -15,12 +16,15 @@ from typing import List, Union, Optional
 from pathlib import Path
 
 from fastapi import APIRouter
-from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
+from fastapi.responses import StreamingResponse, JSONResponse, FileResponse, Response
 
 from pydantic import BaseModel
 import json
 import io
 from PIL import Image
+import mimetypes
+import aiofiles
+import re
 
 from apps.webui.models.files import (
     Files,
@@ -310,3 +314,170 @@ async def delete_file_by_id(id: str, user=Depends(get_verified_user)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
+
+
+############################
+# Upload Video
+############################
+
+
+@router.post("/video")
+async def upload_video(
+    file: UploadFile = File(...),
+    user=Depends(get_verified_user),
+):
+    """
+    Upload a video file. Accepts common video formats.
+    """
+    try:
+        # Validate video file type
+        allowed_types = ["video/mp4", "video/mpeg", "video/quicktime", "video/x-msvideo", "video/webm"]
+        if file.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
+            )
+        
+        # Generate unique filename
+        id = str(uuid.uuid4())
+        filename = f"{id}_{os.path.basename(file.filename)}"
+        file_path = f"{UPLOAD_DIR}/{filename}"
+        
+        # Save video file
+        contents = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(contents)
+        
+        # Store metadata in database
+        file_model = Files.insert_new_file(
+            user.id,
+            FileForm(
+                id=id,
+                filename=filename,
+                meta={
+                    "content_type": file.content_type,
+                    "size": len(contents),
+                    "path": file_path,
+                },
+                file_type="video"
+            ),
+        )
+        
+        if file_model:
+            return file_model
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MESSAGES.DEFAULT("Error uploading video"),
+            )
+    
+    except Exception as e:
+        log.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.DEFAULT(str(e)),
+        )
+
+
+############################
+# Stream Video with Range Support
+############################
+
+
+@router.get("/video/{id}/stream")
+async def stream_video(
+    id: str,
+    range: Optional[str] = Header(None),
+    user=Depends(get_verified_user)
+):
+    """
+    Stream video with support for HTTP range requests.
+    This enables video seeking and efficient streaming.
+    """
+    file = Files.get_file_by_id(id)
+    
+    if not file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    
+    # Verify it's a video file
+    if file.file_type != "video" and not file.meta.get("content_type", "").startswith("video"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File is not a video",
+        )
+    
+    file_path = Path(file.meta["path"])
+    
+    if not file_path.is_file():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    
+    file_size = file_path.stat().st_size
+    
+    # Handle range request for video seeking
+    if range:
+        # Parse range header (e.g., "bytes=0-1023")
+        range_match = re.search(r'bytes=(\d+)-(\d*)', range)
+        if range_match:
+            start = int(range_match.group(1))
+            end = int(range_match.group(2)) if range_match.group(2) else file_size - 1
+            
+            # Ensure valid range
+            start = min(start, file_size - 1)
+            end = min(end, file_size - 1)
+            
+            # Read the requested chunk
+            async def stream_chunk():
+                async with aiofiles.open(file_path, 'rb') as video_file:
+                    await video_file.seek(start)
+                    chunk_size = 8192  # 8KB chunks
+                    current = start
+                    
+                    while current <= end:
+                        read_size = min(chunk_size, end - current + 1)
+                        data = await video_file.read(read_size)
+                        if not data:
+                            break
+                        current += len(data)
+                        yield data
+            
+            headers = {
+                'Content-Range': f'bytes {start}-{end}/{file_size}',
+                'Accept-Ranges': 'bytes',
+                'Content-Length': str(end - start + 1),
+                'Content-Type': file.meta.get("content_type", "video/mp4"),
+            }
+            
+            return StreamingResponse(
+                stream_chunk(),
+                status_code=206,  # Partial Content
+                headers=headers,
+                media_type=file.meta.get("content_type", "video/mp4")
+            )
+    
+    # No range request - stream entire file
+    async def stream_file():
+        async with aiofiles.open(file_path, 'rb') as video_file:
+            chunk_size = 8192  # 8KB chunks
+            while True:
+                data = await video_file.read(chunk_size)
+                if not data:
+                    break
+                yield data
+    
+    headers = {
+        'Accept-Ranges': 'bytes',
+        'Content-Length': str(file_size),
+        'Content-Type': file.meta.get("content_type", "video/mp4"),
+    }
+    
+    return StreamingResponse(
+        stream_file(),
+        headers=headers,
+        media_type=file.meta.get("content_type", "video/mp4")
+    )

@@ -44,4 +44,21 @@ export const fileService = {
   async getImageUrl(fileId: string): Promise<string> {
     return `${apiClient.defaults.baseURL}/files/image/${fileId}`;
   },
+
+  async uploadVideo(file: File): Promise<FileUploadResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await apiClient.post('/files/video', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    return response.data;
+  },
+
+  async getVideoStreamUrl(fileId: string): Promise<string> {
+    return `${apiClient.defaults.baseURL}/files/video/${fileId}/stream`;
+  },
 };
