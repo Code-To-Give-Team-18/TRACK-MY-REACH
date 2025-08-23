@@ -15,10 +15,12 @@ export interface Post {
   video_link: string;
   likes: number;
   comments_count: number;
+  youtube_url: string;
   is_published: boolean;
   is_featured: boolean;
   created_at: string;
   updated_at: string;
+  follow_status: boolean | null;
 };
 
 interface PostCardProps {
@@ -36,15 +38,17 @@ export const PostCard: React.FC<PostCardProps> = ({
   }
 
   return (
-    <div className="flex flex-col gap-2 h-[85dvh] justify-center">
+    <div className="flex flex-col gap-2 justify-center items-center snap-center w-full min-h-dvh" style={{
+      height: "calc(100dvh - 80px)"
+    }}>
       <div className="flex justify-center">
         <video 
-          className="w-[400px] h-[600px] object-cover"
+          className="w-[500px] h-[600px] object-cover"
           style={{ borderRadius: "12px" }}  
           src={post.video_link} width="500" height="500" autoPlay muted loop
         />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 justify-center">
         <p>{post.title}</p>
         <div className="flex flex-row gap-3">
           <button 
