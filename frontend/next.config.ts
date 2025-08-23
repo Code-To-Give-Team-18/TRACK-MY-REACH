@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 'static.wikia.nocookie.net'],
     formats: ['image/avif', 'image/webp'],
   },
   experimental: {

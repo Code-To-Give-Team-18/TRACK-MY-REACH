@@ -4,10 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { 
-  Heart, 
-  Menu, 
-  X, 
+import {
+  Heart,
+  Menu,
+  X,
   ChevronDown,
   Users,
   School,
@@ -48,7 +48,7 @@ export default function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, signOut } = useAuthStore();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,7 +70,7 @@ export default function Header() {
   }, []);
 
   const handleLogout = () => {
-    logout();
+    signOut();
     setIsMobileMenuOpen(false);
     setIsUserMenuOpen(false);
   };
@@ -85,19 +85,18 @@ export default function Header() {
   };
 
   return (
-    <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-lg' 
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
+          ? 'bg-white/95 backdrop-blur-md shadow-lg'
           : 'bg-white/80 backdrop-blur-sm'
-      }`}
+        }`}
     >
       <div className="w-full px-4 lg:px-8">
         <nav className="max-w-7xl mx-auto flex items-center justify-between h-20">
           {/* Logo - Fixed Width for Balance */}
           <div className="flex-shrink-0 w-40 lg:w-48">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="inline-flex items-center gap-3 group"
             >
               <div className="relative">
@@ -122,9 +121,8 @@ export default function Header() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`flex items-center gap-2 text-gray-700 hover:text-orange-600 transition-colors font-medium ${
-                    pathname === item.href ? 'text-orange-600' : ''
-                  }`}
+                  className={`flex items-center gap-2 text-gray-700 hover:text-orange-600 transition-colors font-medium ${pathname === item.href ? 'text-orange-600' : ''
+                    }`}
                 >
                   <item.icon className="w-4 h-4" />
                   <span>{item.label}</span>
@@ -136,7 +134,7 @@ export default function Header() {
           {/* Desktop Donate Section - Fixed Width for Balance */}
           <div className="hidden md:flex items-center justify-end gap-3 lg:gap-4 flex-shrink-0 w-40 lg:w-48">
             <Link href="/donate">
-              <Button 
+              <Button
                 className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-full px-4 lg:px-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                 size="sm"
               >
@@ -144,7 +142,7 @@ export default function Header() {
                 <span>Donate Now</span>
               </Button>
             </Link>
-            
+
             {isAuthenticated && user ? (
               <div className="relative" ref={userMenuRef}>
                 <button
@@ -153,7 +151,7 @@ export default function Header() {
                 >
                   {getUserInitials(user.name || 'U')}
                 </button>
-                
+
                 {/* User Dropdown Menu */}
                 <AnimatePresence>
                   {isUserMenuOpen && (
@@ -175,7 +173,7 @@ export default function Header() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="py-2">
                         <Link
                           href="/dashboard"
@@ -185,7 +183,7 @@ export default function Header() {
                           <LayoutDashboard className="w-4 h-4 text-gray-600" />
                           <span className="text-gray-700">Dashboard</span>
                         </Link>
-                        
+
                         <Link
                           href="/profile"
                           onClick={() => setIsUserMenuOpen(false)}
@@ -194,6 +192,7 @@ export default function Header() {
                           <User className="w-4 h-4 text-gray-600" />
                           <span className="text-gray-700">My Profile</span>
                         </Link>
+
 
                         {/*Show "Create Post" only if the user is an admin*/}
                         {user.role === 'admin' && (
@@ -206,6 +205,18 @@ export default function Header() {
                             <span className="text-gray-700">Create Post</span>
                           </Link>
                         )}
+        
+                        {user.role === 'admin' && (
+                          <Link
+                            href="add-children"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
+                          >
+                            <HandHeart className="w-4 h-4 text-gray-600" />
+                            <span className="text-gray-700">Add Children</span>
+                          </Link>
+                        )}
+
 
                         <Link
                           href="/settings"
@@ -215,7 +226,7 @@ export default function Header() {
                           <Settings className="w-4 h-4 text-gray-600" />
                           <span className="text-gray-700">Settings</span>
                         </Link>
-                        
+
                         <div className="border-t border-gray-100 mt-2 pt-2">
                           <button
                             onClick={handleLogout}
@@ -271,9 +282,8 @@ export default function Header() {
                     key={item.label}
                     href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-50 transition-colors ${
-                      pathname === item.href ? 'bg-orange-50 text-orange-600' : 'text-gray-700'
-                    }`}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-50 transition-colors ${pathname === item.href ? 'bg-orange-50 text-orange-600' : 'text-gray-700'
+                      }`}
                   >
                     <item.icon className="w-5 h-5" />
                     <span className="font-medium">{item.label}</span>
@@ -296,20 +306,21 @@ export default function Header() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
                       <Button variant="outline" className="w-full rounded-full justify-start">
                         <LayoutDashboard className="w-4 h-4 mr-2" />
                         Dashboard
                       </Button>
                     </Link>
-                    
+
                     <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}>
                       <Button variant="outline" className="w-full rounded-full justify-start">
                         <User className="w-4 h-4 mr-2" />
                         My Profile
                       </Button>
                     </Link>
+
 
                     {user.role === 'admin' && (
                       <Link href="/create-post" onClick={() => setIsMobileMenuOpen(false)}>
@@ -319,14 +330,26 @@ export default function Header() {
                         </Button>
                       </Link>
                     )}
+        
+                    {user.role === 'admin' && (
+                      <Link
+                        href="/add-children"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
+                      >
+                        <HandHeart className="w-4 h-4 text-gray-600" />
+                        <span className="text-gray-700">Add Children</span>
+                      </Link>
+                    )}
                     
+
                     <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)}>
                       <Button variant="outline" className="w-full rounded-full justify-start">
                         <Settings className="w-4 h-4 mr-2" />
                         Settings
                       </Button>
                     </Link>
-                    
+
                     <Button
                       onClick={handleLogout}
                       variant="outline"
@@ -344,7 +367,7 @@ export default function Header() {
                     </Button>
                   </Link>
                 )}
-                
+
                 <Link href="/donate" onClick={() => setIsMobileMenuOpen(false)}>
                   <Button className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-full shadow-lg">
                     <Heart className="w-4 h-4 mr-2 animate-pulse" />
