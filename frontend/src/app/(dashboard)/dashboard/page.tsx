@@ -10,12 +10,10 @@ export default function DashboardPage() {
   const { user, isAuthenticated, checkAuth, signOut, isLoading } = useAuthStore();
 
   useEffect(() => {
-    // Always check auth on mount to verify token is still valid
     checkAuth();
   }, []);
 
   useEffect(() => {
-    // Only redirect if we've finished checking and user is not authenticated
     if (!isLoading && !isAuthenticated) {
       router.push('/login');
     }
@@ -23,9 +21,9 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-400 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
@@ -37,146 +35,106 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen w-full">
-      <nav className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Dashboard
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                {user.email}
-              </span>
-              <Button
-                onClick={() => signOut()}
-                className="text-sm bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
-              >
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                Welcome, {user.name}!
-              </h2>
-              <div className="space-y-3">
-                <div>
-                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Email:
-                  </span>
-                  <span className="ml-2 text-sm text-gray-900 dark:text-white">
-                    {user.email}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Role:
-                  </span>
-                  <span className="ml-2 text-sm text-gray-900 dark:text-white capitalize">
-                    {user.role}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    User ID:
-                  </span>
-                  <span className="ml-2 text-sm text-gray-900 dark:text-white">
-                    {user.id}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Account Created:
-                  </span>
-                  <span className="ml-2 text-sm text-gray-900 dark:text-white">
-                    {new Date(user.created_at * 1000).toLocaleDateString()}
-                  </span>
-                </div>
+    <section className="min-h-screen py-20 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50">
+      <div className="container mx-auto px-4">
+        <div className="max-w-3xl mx-auto mb-10">
+          <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg p-8 flex flex-col items-center">
+            <h2 className="text-3xl font-bold text-orange-600 mb-2">Welcome, {user.name}!</h2>
+            <p className="text-lg text-gray-700 dark:text-gray-200 mb-6">
+              Your dashboard overview
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+              <div className="bg-gradient-to-br from-orange-100 via-pink-100 to-purple-100 rounded-xl shadow p-6">
+                <span className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Email</span>
+                <span className="block text-lg text-gray-900 dark:text-white">{user.email}</span>
               </div>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {user.role === 'admin' && (
-              <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg border-2 border-indigo-500">
-                <div className="px-4 py-5 sm:p-6">
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                    Admin Panel
-                  </dt>
-                  <dd className="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">
-                    👥
-                  </dd>
-                  <Button
-                    onClick={() => router.push('/admin/users')}
-                    className="mt-3 w-full text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
-                  >
-                    Manage Users
-                  </Button>
-                </div>
+              <div className="bg-gradient-to-br from-orange-100 via-pink-100 to-purple-100 rounded-xl shadow p-6">
+                <span className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Role</span>
+                <span className="block text-lg text-gray-900 dark:text-white capitalize">{user.role}</span>
               </div>
-            )}
-            
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                  Profile
-                </dt>
-                <dd className="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">
-                  ✓
-                </dd>
-                <Button
-                  onClick={() => router.push('/profile')}
-                  className="mt-3 w-full text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
-                >
-                  View Profile
-                </Button>
+              <div className="bg-gradient-to-br from-orange-100 via-pink-100 to-purple-100 rounded-xl shadow p-6">
+                <span className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">User ID</span>
+                <span className="block text-lg text-gray-900 dark:text-white">{user.id}</span>
               </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                  Settings
-                </dt>
-                <dd className="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">
-                  ⚙️
-                </dd>
-                <Button
-                  onClick={() => router.push('/settings')}
-                  className="mt-3 w-full text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
-                >
-                  Manage Settings
-                </Button>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                  Files
-                </dt>
-                <dd className="mt-1 text-3xl font-semibold text-gray-900 dark:text-white">
-                  📁
-                </dd>
-                <Button
-                  className="mt-3 w-full text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
-                >
-                  Manage Files
-                </Button>
+              <div className="bg-gradient-to-br from-orange-100 via-pink-100 to-purple-100 rounded-xl shadow p-6">
+                <span className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Account Created</span>
+                <span className="block text-lg text-gray-900 dark:text-white">
+                  {new Date(user.created_at * 1000).toLocaleDateString()}
+                </span>
               </div>
             </div>
           </div>
         </div>
-      </main>
-    </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {user.role === 'admin' && (
+            <>
+              <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg border-2 border-orange-400 flex flex-col items-center p-8">
+                <span className="text-xl font-semibold text-orange-600 mb-2">Admin Panel</span>
+                <span className="text-4xl mb-4">👥</span>
+                <Button
+                  onClick={() => router.push('/admin/users')}
+                  className="w-full text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-full"
+                >
+                  Manage Users
+                </Button>
+              </div>
+              <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg border-2 border-pink-400 flex flex-col items-center p-8">
+                <span className="text-xl font-semibold text-pink-600 mb-2">Add Children</span>
+                <span className="text-4xl mb-4">🧒</span>
+                <Button
+                  onClick={() => router.push('/add-children')}
+                  className="w-full text-sm bg-pink-500 hover:bg-pink-600 text-white rounded-full"
+                >
+                  Add Children
+                </Button>
+              </div>
+              <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg border-2 border-purple-400 flex flex-col items-center p-8">
+                <span className="text-xl font-semibold text-purple-600 mb-2">Create Post</span>
+                <span className="text-4xl mb-4">📝</span>
+                <Button
+                  onClick={() => router.push('/create-post')}
+                  className="w-full text-sm bg-purple-500 hover:bg-purple-600 text-white rounded-full"
+                >
+                  Create Post
+                </Button>
+              </div>
+            </>
+          )}
+
+          <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg flex flex-col items-center p-8">
+            <span className="text-xl font-semibold text-pink-600 mb-2">Profile</span>
+            <span className="text-4xl mb-4">✓</span>
+            <Button
+              onClick={() => router.push('/profile')}
+              className="w-full text-sm bg-pink-500 hover:bg-pink-600 text-white rounded-full"
+            >
+              View Profile
+            </Button>
+          </div>
+
+          <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg flex flex-col items-center p-8">
+            <span className="text-xl font-semibold text-purple-600 mb-2">Settings</span>
+            <span className="text-4xl mb-4">⚙️</span>
+            <Button
+              onClick={() => router.push('/settings')}
+              className="w-full text-sm bg-purple-500 hover:bg-purple-600 text-white rounded-full"
+            >
+              Manage Settings
+            </Button>
+          </div>
+
+          <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg flex flex-col items-center p-8">
+            <span className="text-xl font-semibold text-orange-600 mb-2">Files</span>
+            <span className="text-4xl mb-4">📁</span>
+            <Button
+              className="w-full text-sm bg-orange-500 hover:bg-orange-600 text-white rounded-full"
+            >
+              Manage Files
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
