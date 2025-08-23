@@ -57,6 +57,14 @@ export const postService = {
     return response.data;
   },
 
+  async getPostsByRegion(regionId: string, params?: {
+    page?: number;
+    limit?: number
+  }): Promise<PaginatedPosts> {
+    const response = await apiClient.get(`/posts/region/${regionId}`, { params });
+    return response.data;
+  },
+
   async getMostRecentPostByChild(childId: string): Promise<PostResponse> {
     const response = await apiClient.get(`/posts/child/${childId}/recent`);
     return response.data;
