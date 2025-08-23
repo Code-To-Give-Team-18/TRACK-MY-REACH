@@ -36,7 +36,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 h-[85dvh] justify-center">
       <div className="flex justify-center">
         <video 
           className="w-[400px] h-[600px] object-cover"
