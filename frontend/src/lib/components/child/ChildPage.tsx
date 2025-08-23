@@ -1,17 +1,52 @@
 "use client"
 
 import Image from "next/image"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation"
 import { ChildInfo } from "./components/ChildInfo";
-import { Child } from "./shared/types/Child";
-import { useChild } from "./hooks/useChild";
-import { ChildProvider } from "./contexts/ChildContext";
+import { ChildProvider, useChildContext } from "./contexts/ChildContext";
+import { useEffect, useState } from "react";
+import { Post, PostCard } from "../stories/components/PostCard";
 
 const Posts = () => {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const { child } = useChildContext();
+
+  const fetchPost = async (pageNumber: number, pageSize: number) => {
+    const response = await fetch(`http://localhost:8080/api/v1/posts/child/${child?.id}?page=${pageNumber}&limit=${pageSize}`, {
+      method: "GET"
+    });
+    const page = await response.json();
+    const newPosts = [...posts, ...page.items];
+    setPosts(newPosts);
+    setPageNumber(pageNumber+1);
+    setHasMore(page.has_next);
+  }
+
+  useEffect(() => {
+    if (!child) return;
+
+    fetchPost(1, 10);
+  }, [child]);
+
+  if (!child) return;
+
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 2000 && hasMore) {
+      fetchPost(pageNumber, 10);
+    }
+  };
+
   return (
-    <div>
-      TODO: Post feed
+    <div
+      className="flex flex-col overflow-y-scroll snap-y snap-mandatory h-full max-h-dvh"
+      onScroll={handleScroll}
+    >
+      {posts.map((post) => {
+        return <PostCard post={post} key={post.id}/>
+      })}
     </div>
   );
 }
@@ -65,11 +100,8 @@ export const ChildPage = () => {
           <ChildInfo/>
         </div>
         <FanClub/>
-
-        <div className="flex flex-col justify-center">
-          <Posts/>
-        </div>
       </div>
+      <Posts/>
     </ChildProvider>
   );
 }
