@@ -4,7 +4,7 @@ from enum import Enum
 from pydantic import BaseModel
 
 from apps.webui.models.posts import Posts
-from apps.webui.models.posts_schemas import PostCreateRequest, PostResponse
+from apps.webui.models.posts_schemas import PostCreateRequest, PostUpdateRequest, PostResponse
 from utils.utils import get_current_user
 import apps.webui.models.followers as followers_models
 from peewee import fn
@@ -115,6 +115,75 @@ async def get_posts_by_region(
         return PaginatedPosts(items=items, page=page, limit=limit, has_next=has_next)
     except Exception as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error retrieving posts: {str(e)}")
+
+############################
+# Get Single Post by ID
+############################
+@router.get("/{post_id}", response_model=PostResponse)
+async def get_post_by_id(post_id: str):
+    try:
+        post = Posts.get_post_by_id(post_id)
+        if not post:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Post not found")
+        return post
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error retrieving post: {str(e)}")
+
+############################
+# Update Post 
+############################
+@router.put("/{post_id}", response_model=PostResponse)
+async def update_post(post_id: str, form_data: PostUpdateRequest, user=Depends(get_current_user)):
+    try:
+        existing_post = Posts.get_post_by_id(post_id)
+        if not existing_post:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Post not found")
+        
+        # Check authorization - only author or admin can update
+        if existing_post["author_id"] != user.id and user.role != "admin":
+            raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Not authorized to update this post")
+        
+        # Prepare update data - only include non-None values
+        update_data = {}
+        
+        if form_data.caption is not None:
+            update_data["caption"] = form_data.caption
+        
+        if form_data.post_type is not None:
+            update_data["post_type"] = form_data.post_type
+            
+        if form_data.is_published is not None:
+            update_data["is_published"] = form_data.is_published
+            
+        if form_data.is_featured is not None:
+            update_data["is_featured"] = form_data.is_featured
+        
+        # Handle media URLs - combine picture_link with existing or new media_urls
+        media_urls = existing_post.get("media_urls", [])
+        if form_data.picture_link is not None:
+            # If a new picture link is provided, replace the first media URL or add it
+            if media_urls and len(media_urls) > 0:
+                media_urls[0] = form_data.picture_link
+            else:
+                media_urls = [form_data.picture_link]
+            update_data["media_urls"] = media_urls
+            
+        if form_data.video_link is not None:
+            update_data["video_link"] = form_data.video_link
+        
+        # Perform the update
+        updated_post = Posts.update_post(post_id, **update_data)
+        
+        if not updated_post:
+            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update post")
+            
+        return updated_post
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Error updating post: {str(e)}")
 
 ############################
 # Delete Post 

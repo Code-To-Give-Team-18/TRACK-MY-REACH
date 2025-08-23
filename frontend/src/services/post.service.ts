@@ -74,4 +74,25 @@ export const postService = {
     const response = await apiClient.delete(`/posts/${postId}`);
     return response.data;
   },
+
+  async updatePost(postId: string, data: Partial<CreatePostData>): Promise<PostResponse> {
+    const response = await apiClient.put(`/posts/${postId}`, data);
+    return response.data;
+  },
+
+  async getPost(postId: string): Promise<PostResponse> {
+    const response = await apiClient.get(`/posts/${postId}`);
+    return response.data;
+  },
+
+  // Get all posts (can be filtered on frontend if needed for "my posts")
+  async getAllPosts(params?: { 
+    sort?: 'recent' | 'likes';
+    page?: number; 
+    limit?: number;
+    userId?: string;
+  }): Promise<PaginatedPosts> {
+    const response = await apiClient.get('/posts', { params });
+    return response.data;
+  },
 };

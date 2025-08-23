@@ -7,6 +7,14 @@ class PostCreateRequest(BaseModel):
     video_link: Optional[str] = None
     picture_link: Optional[str] = None
 
+class PostUpdateRequest(BaseModel):
+    caption: Optional[str] = None
+    video_link: Optional[str] = None
+    picture_link: Optional[str] = None
+    post_type: Optional[str] = None
+    is_published: Optional[bool] = None
+    is_featured: Optional[bool] = None
+
 class PostResponse(BaseModel):
     id: str
     child_id: str
