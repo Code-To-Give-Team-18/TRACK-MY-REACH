@@ -48,7 +48,7 @@ export default function Header() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, signOut } = useAuthStore();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,7 +70,7 @@ export default function Header() {
   }, []);
 
   const handleLogout = () => {
-    logout();
+    signOut();
     setIsMobileMenuOpen(false);
     setIsUserMenuOpen(false);
   };
