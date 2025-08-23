@@ -246,7 +246,9 @@ async def get_image(id: str, user=Depends(get_verified_user)):
 
 
 @router.get("/{id}/content", response_model=Optional[FileModel])
-async def get_file_content_by_id(id: str, user=Depends(get_verified_user)):
+async def get_file_content_by_id(id: str,
+                                #  user=Depends(get_verified_user)
+                                 ):
     file = Files.get_file_by_id(id)
 
     if file:
@@ -388,7 +390,7 @@ async def upload_video(
 async def stream_video(
     id: str,
     range: Optional[str] = Header(None),
-    user=Depends(get_verified_user)
+    # user=Depends(get_verified_user)
 ):
     """
     Stream video with support for HTTP range requests.
