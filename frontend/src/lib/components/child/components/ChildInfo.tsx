@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { DonateButton } from "./DonateButton";
 import { useChildContext } from "../contexts/ChildContext";
 
@@ -7,19 +6,20 @@ export const ChildInfo: React.FC = () => {
   if (!child) return;
 
   return(
-    <div className="flex gap-20 h-dvh">
-      <div className="flex justify-center items-center">
-        <Image
-          src="https://static.wikia.nocookie.net/no-game-no-life/images/d/dc/Shiro_Anime_HQ.png/revision/latest?cb=20210523001016"
-          alt="no game no life"
-          width={300}
-          height={400}
-        />
-      </div>
-      <div className="flex flex-col items-start justify-center gap-8">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-4xl font-bold">{child.name}</h1>
-          <p className="text-md">{child.description}</p>
+    <div className="relative flex gap-20 h-dvh w-full">
+      <video
+        className="absolute inset-0 w-full h-full object-cover z-0"
+        src="https://reach.org.hk/_assets/video/436f7419b8ea8afe3ddc521715b019f6.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+      />
+      <div className="absolute inset-0 bg-black opacity-50 z-10"/>
+      <div className="flex flex-col items-center justify-center gap-8 z-20 w-full">
+        <div className="flex flex-col gap-1 w-full jusify-center items-center">
+          <h1 className="text-4xl font-extrabold text-white">Meet {child.name}</h1>
+          <p className="text-md text-white">{child.description}</p>
         </div>
         <div className="flex items-center justify-center w-full">
           <DonateButton/>

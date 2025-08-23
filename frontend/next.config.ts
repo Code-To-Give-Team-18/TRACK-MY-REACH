@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   images: {
-    domains: ['localhost', backendHostname, 'static.wikia.nocookie.net', 'www.w3schools.com'].filter((domain, index, self) => 
+    domains: ['localhost', backendHostname, 'static.wikia.nocookie.net', 'www.w3schools.com', 'via.placeholder.com'].filter((domain, index, self) => 
       self.indexOf(domain) === index
     ),
     formats: ['image/avif', 'image/webp'],

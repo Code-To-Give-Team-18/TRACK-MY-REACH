@@ -40,23 +40,30 @@ const Posts = () => {
   };
 
   return (
-    <div
-      className="flex flex-col overflow-y-scroll snap-y snap-mandatory h-full max-h-dvh"
-      onScroll={handleScroll}
-    >
-      {posts.map((post) => {
-        return <PostCard post={post} key={post.id}/>
-      })}
+    <div className="w-full h-full">
+      <h1 className="text-4xl text-black font-extrabold p-10 text-center">View my updates here</h1>
+      <div
+        className="flex flex-col overflow-y-scroll snap-y snap-mandatory h-full max-h-dvh"
+        onScroll={handleScroll}
+      >
+        {posts.map((post) => {
+          return <PostCard post={post} key={post.id}/>
+        })}
+      </div>
     </div>
   );
 }
 
 const FanClub = () => {
+  const { child } = useChildContext();
+
+  if (!child) return;
+
   return (
     <div className="bg-[#EDD4B2] w-full h-[80dvh]">
       <div className="mb-8">
         <h1 className="font-bold text-4xl text-center pt-10 pb-2">Donor Fan Club</h1>
-        <p className="text-center">Thank you to all my fans for supporting me</p>
+        <p className="text-center">Thank you to all my fans for supporting me. Together we have raised x $ for charity</p>
       </div>
       <div className="flex gap-20 justify-center">
         <div className="flex flex-col gap-2 justify-center items-center">
@@ -69,7 +76,7 @@ const FanClub = () => {
         </div>
         <div className="flex justify-center items-center">
           <Image
-            src="https://static.wikia.nocookie.net/no-game-no-life/images/d/dc/Shiro_Anime_HQ.png/revision/latest?cb=20210523001016"
+            src={child?.picture_link}
             alt="no game no life"
             width={300}
             height={400}
@@ -96,7 +103,7 @@ export const ChildPage = () => {
   return (
     <ChildProvider childId={childId}>
       <div className="flex flex-col w-full justify-center items-center">
-        <div className="flex flex-col h-[80dvh]">
+        <div className="flex flex-col h-[80dvh] w-full">
           <ChildInfo/>
         </div>
         <FanClub/>
