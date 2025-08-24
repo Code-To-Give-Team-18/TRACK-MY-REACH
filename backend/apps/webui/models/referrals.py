@@ -221,7 +221,7 @@ class ReferralsTable:
             fn.COUNT(ReferralTracking.id).alias('referral_count'),
             fn.SUM(ReferralTracking.total_donations).alias('total_donations'),
             fn.SUM(ReferralTracking.donation_count).alias('donation_count')
-        ).where(ReferralTracking.status == 'donated')
+        )
         
         if period != 'all_time':
             if period == 'daily':
@@ -235,23 +235,28 @@ class ReferralsTable:
             
             query = query.where(ReferralTracking.first_donation_at >= since)
         
+        # Group by referrer and order by total donations
         query = query.group_by(ReferralTracking.referrer).order_by(
             fn.SUM(ReferralTracking.total_donations).desc()
         ).limit(limit)
         
         results = []
         for row in query:
-            user_data = model_to_dict(row.referrer)
-            results.append({
-                'user': {
-                    'id': user_data['id'],
-                    'name': user_data['name'],
-                    'profile_image_url': user_data.get('profile_image_url')
-                },
-                'referral_count': row.referral_count,
-                'total_donations': float(row.total_donations or 0),
-                'donation_count': row.donation_count
-            })
+            try:
+                user_data = model_to_dict(row.referrer)
+                results.append({
+                    'user': {
+                        'id': user_data['id'],
+                        'name': user_data['name'],
+                        'profile_image_url': user_data.get('profile_image_url')
+                    },
+                    'referral_count': row.referral_count,
+                    'total_donations': float(row.total_donations or 0),
+                    'donation_count': row.donation_count
+                })
+            except:
+                # Skip invalid entries
+                continue
         
         return results
 

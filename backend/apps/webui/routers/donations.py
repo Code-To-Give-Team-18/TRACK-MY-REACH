@@ -5,7 +5,7 @@ from peewee import fn
 
 from utils.utils import get_current_user
 from apps.webui.models.donations import Donations, Donation
-from apps.webui.models.users import User
+from apps.webui.models.users import User, Users
 
 from decimal import Decimal, ROUND_DOWN
 from pydantic import BaseModel, Field, validator
@@ -65,6 +65,7 @@ class QuickDonationIn(BaseModel):
     currency: Optional[str] = "HKD"
     payment_method: Optional[str] = None
     transaction_id: Optional[str] = None
+    referral_code: Optional[str] = None
 
 class GuestDonationIn(BaseModel):
     child_id: str
@@ -72,6 +73,7 @@ class GuestDonationIn(BaseModel):
     currency: Optional[str] = "HKD"
     payment_method: Optional[str] = None
     transaction_id: Optional[str] = None
+    referral_code: Optional[str] = None
 
 class StandardDonationIn(BaseModel):
     user_id: str
@@ -80,7 +82,7 @@ class StandardDonationIn(BaseModel):
     currency: Optional[str] = "HKD"
     payment_method: Optional[str] = None
     transaction_id: Optional[str] = None
-    referral_code: str = None
+    referral_code: Optional[str] = None
 
 class TopDonorOut(BaseModel):
     user_id: str
@@ -122,6 +124,7 @@ def create_quick_donation(body: QuickDonationIn):
             currency=body.currency,
             payment_method=body.payment_method,
             transaction_id=body.transaction_id,
+            referral_code=body.referral_code,
         )
     except Exception as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Quick donation failed: {e}")
@@ -138,6 +141,7 @@ def create_anonymous_donation(body: GuestDonationIn):
             currency=body.currency,
             payment_method=body.payment_method,
             transaction_id=body.transaction_id,
+            referral_code=body.referral_code,
         )
     except Exception as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Anonymous donation failed: {e}")
@@ -154,6 +158,7 @@ def create_standard_donation(body: StandardDonationIn):
             currency=body.currency,
             payment_method=body.payment_method,
             transaction_id=body.transaction_id,
+            referral_code=body.referral_code,
         )
     except Exception as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Standard donation failed: {e}")
@@ -337,6 +342,28 @@ def recent_donors_by_child(child_id: str, k: int = Query(10, gt=0, le=100)):
         if len(out) >= k:
             break
     return out
+
+@router.get("/validate-referral/{referral_code}")
+def validate_referral_code(referral_code: str):
+    """Validate if a referral code exists and return referrer info."""
+    try:
+        referrer = Users.get_user_by_referral_code(referral_code)
+        if not referrer:
+            return {
+                "valid": False,
+                "message": "Invalid referral code"
+            }
+        
+        return {
+            "valid": True,
+            "referrer_name": referrer.get('name', 'Anonymous'),
+            "message": f"Referral code from {referrer.get('name', 'a supporter')}"
+        }
+    except Exception as e:
+        return {
+            "valid": False,
+            "message": "Error validating referral code"
+        }
 
 @router.post("/bulk/split", response_model=BulkDonateOut, status_code=status.HTTP_201_CREATED)
 def donate_to_all(body: BulkDonateIn):

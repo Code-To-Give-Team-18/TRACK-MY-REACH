@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth.store';
 import { donationService, DonationResponse } from '@/services/donation.service';
 import { DonationModeSelector, DonationMode } from './DonationModeSelector';
-import { AlertCircle, CheckCircle, Loader2, ArrowRight, Heart, LogIn, UserX } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, ArrowRight, Heart, LogIn, UserX, Gift, Check, X, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -41,6 +41,15 @@ export function CheckoutFlow({
   const [cvv, setCvv] = useState('');
   const [donorName, setDonorName] = useState('');
   const [donorEmail, setDonorEmail] = useState('');
+  
+  // Referral code state
+  const [referralCode, setReferralCode] = useState('');
+  const [validatingReferral, setValidatingReferral] = useState(false);
+  const [referralValidation, setReferralValidation] = useState<{
+    valid: boolean;
+    referrer_name?: string;
+    message: string;
+  } | null>(null);
 
   // Quick amount presets
   const quickAmounts = [50, 100, 200, 500, 1000];
@@ -61,6 +70,30 @@ export function CheckoutFlow({
     }
   }, [isQuickFlow, initialMode, isAuthenticated, childId]);
 
+  // Validate referral code when user stops typing
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (referralCode && referralCode.length >= 3) {
+        setValidatingReferral(true);
+        try {
+          const result = await donationService.validateReferralCode(referralCode);
+          setReferralValidation(result);
+        } catch (error) {
+          setReferralValidation({
+            valid: false,
+            message: 'Error validating referral code'
+          });
+        } finally {
+          setValidatingReferral(false);
+        }
+      } else {
+        setReferralValidation(null);
+      }
+    }, 500); // Debounce for 500ms
+
+    return () => clearTimeout(timer);
+  }, [referralCode]);
+
   const handleDonation = async () => {
     setIsProcessing(true);
     setError(null);
@@ -77,7 +110,8 @@ export function CheckoutFlow({
           amount,
           currency: 'HKD',
           payment_method: paymentMethod,
-          transaction_id: transactionId
+          transaction_id: transactionId,
+          referral_code: referralValidation?.valid ? referralCode : undefined
         });
         toast.success('Quick donation successful! Thank you for supporting all children.');
         
@@ -91,7 +125,8 @@ export function CheckoutFlow({
           amount,
           currency: 'HKD',
           payment_method: paymentMethod,
-          transaction_id: transactionId
+          transaction_id: transactionId,
+          referral_code: referralValidation?.valid ? referralCode : undefined
         });
         toast.success('Guest donation successful! Your anonymous support makes a difference.');
         
@@ -109,7 +144,8 @@ export function CheckoutFlow({
           amount,
           currency: 'HKD',
           payment_method: paymentMethod,
-          transaction_id: transactionId
+          transaction_id: transactionId,
+          referral_code: referralValidation?.valid ? referralCode : undefined
         });
         toast.success('Donation successful! Thank you for your continued support.');
       } else {
@@ -254,6 +290,92 @@ export function CheckoutFlow({
           isAuthenticated={isAuthenticated}
           childId={childId}
         />
+      )}
+
+      {/* Referral Code Section - Prominent placement - Available for ALL donation types */}
+      {(
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-5 border border-purple-200"
+        >
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Gift className="h-5 w-5 text-purple-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900 mb-1">Have a Referral Code?</h3>
+              <p className="text-xs text-gray-600 mb-3">
+                If someone invited you to support this cause, enter their code below
+              </p>
+              
+              <div className="relative">
+                <input
+                  type="text"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  className={`
+                    w-full px-4 py-2.5 pr-12 border-2 rounded-lg transition-all font-mono text-sm
+                    focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                    ${referralValidation?.valid 
+                      ? 'border-green-500 bg-green-50' 
+                      : referralValidation?.valid === false 
+                      ? 'border-red-500 bg-red-50' 
+                      : 'border-purple-300 bg-white'
+                    }
+                  `}
+                  placeholder="Enter code (e.g., JOHN123)"
+                  maxLength={20}
+                />
+                
+                {/* Validation indicator */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {validatingReferral && (
+                    <Loader2 className="h-5 w-5 animate-spin text-purple-400" />
+                  )}
+                  {!validatingReferral && referralValidation?.valid && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="flex items-center justify-center w-6 h-6 bg-green-500 rounded-full"
+                    >
+                      <Check className="h-4 w-4 text-white" />
+                    </motion.div>
+                  )}
+                  {!validatingReferral && referralValidation?.valid === false && referralCode && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="flex items-center justify-center w-6 h-6 bg-red-500 rounded-full"
+                    >
+                      <X className="h-4 w-4 text-white" />
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Validation message with animation */}
+              <AnimatePresence>
+                {referralValidation && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2"
+                  >
+                    <p className={`
+                      text-xs font-medium flex items-center gap-1
+                      ${referralValidation.valid ? 'text-green-600' : 'text-red-600'}
+                    `}>
+                      {referralValidation.valid && <Sparkles className="h-3 w-3" />}
+                      {referralValidation.message}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
       )}
 
       {/* Amount Selection */}

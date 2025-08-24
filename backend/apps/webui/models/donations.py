@@ -27,7 +27,7 @@ class Donation(Model):
 
 
     is_anonymous = BooleanField(default=False)
-    referral_code = CharField(max_length=20, null=True)  # Ignored for Guest/Quick
+    referral_code = CharField(max_length=20, null=True)  # Referral code for tracking who referred the donor
     transaction_id = CharField(max_length=255, null=True)
     payment_method = CharField(max_length=50, null=True)
     status = CharField(max_length=50, default='completed')  # pending, completed, failed
@@ -79,11 +79,11 @@ class DonationsTable:
     ) -> dict:
         """
         Business rules:
-        - Quick: amount only; user=None, child=None, is_anonymous=True, referral_code ignored.
+        - Quick: amount only; user=None, child=None, is_anonymous=True, referral_code accepted.
         - Guest: child_id + amount; no user id required.
                  If a sentinel user '0000' exists, use it; otherwise user=None.
-                 is_anonymous=True; referral_code ignored.
-        - Standard: user_id + child_id + amount required; is_anonymous=False.
+                 is_anonymous=True; referral_code accepted.
+        - Standard: user_id + child_id + amount required; is_anonymous=False; referral_code accepted.
         """
         from apps.webui.models.children import Children
         from apps.webui.models.regions import Regions
@@ -103,7 +103,7 @@ class DonationsTable:
             user_id = None
             child_id = None
             is_anonymous = True
-            referral_code = None
+            # Quick donations can now have referral codes
 
 
         elif donation_type == 'Guest':
@@ -116,7 +116,7 @@ class DonationsTable:
             except Exception:
                 user_id = None
             is_anonymous = True
-            referral_code = None
+            # Guest donations can now have referral codes
 
 
         else:  # Standard
@@ -157,6 +157,10 @@ class DonationsTable:
         # Side effects
         if child_id:
             Children.update_donation_received(child_id, amount)
+        
+        # Track referral if referral code is provided (for all donation types)
+        if referral_code:
+            self._track_referral_donation(referral_code, user_id, float(amount))
 
 
         return self._donation_to_dict(donation)
@@ -324,6 +328,79 @@ class DonationsTable:
             for s in summaries
         ]
 
+
+    def _track_referral_donation(self, referral_code: str, donor_user_id: str, amount: float):
+        """Track referral donation in the referral system"""
+        try:
+            from apps.webui.models.referrals import Referrals, ReferralTracking
+            from apps.webui.models.users import Users
+            
+            # Validate referral code exists
+            referrer = Users.get_user_by_referral_code(referral_code)
+            if not referrer:
+                print(f"Invalid referral code: {referral_code}")
+                return  # Invalid referral code, skip tracking
+            
+            # Don't track self-referrals
+            if donor_user_id and donor_user_id == referrer['id']:
+                print(f"Self-referral attempted for user {donor_user_id}")
+                return
+            
+            referrer_id = referrer['id']
+            
+            # Create or update referral tracking
+            if donor_user_id:
+                # For logged-in users, track the referral properly
+                # First check if this user was already tracked as referred
+                existing = ReferralTracking.get_or_none(
+                    ReferralTracking.referred_user == donor_user_id
+                )
+                
+                if not existing:
+                    # Create new tracking record
+                    ReferralTracking.create(
+                        referrer=referrer_id,
+                        referred_user=donor_user_id,
+                        referral_code=referral_code,
+                        status='donated',
+                        first_donation_at=datetime.now(),
+                        total_donations=amount,
+                        donation_count=1
+                    )
+                    print(f"Created new referral tracking for user {donor_user_id} referred by {referrer_id}")
+                else:
+                    # Update existing tracking
+                    existing.total_donations += amount
+                    existing.donation_count += 1
+                    existing.updated_at = datetime.now()
+                    existing.save()
+                    print(f"Updated referral tracking for user {donor_user_id}")
+            else:
+                # For anonymous/guest donations, still track them
+                ReferralTracking.create(
+                    referrer=referrer_id,
+                    referred_user=None,  # Anonymous
+                    referral_code=referral_code,
+                    status='donated',
+                    first_donation_at=datetime.now(),
+                    total_donations=amount,
+                    donation_count=1
+                )
+                print(f"Created anonymous referral tracking for referrer {referrer_id}")
+            
+            # Update referrer's total in the users table
+            Users.update_referral_donation_total(referrer_id, amount)
+            
+            # Check for milestone rewards (simplified for now)
+            # This would normally be handled by the referral system's reward logic
+            
+            print(f"Successfully tracked referral donation: {referral_code} -> {amount}")
+            
+        except Exception as e:
+            # Log error but don't fail the donation
+            print(f"Error tracking referral donation: {e}")
+            import traceback
+            traceback.print_exc()
 
     def _donation_to_dict(self, d: Donation) -> dict:
         if not d:

@@ -5,6 +5,7 @@ export interface QuickDonationData {
   currency?: string;
   payment_method?: string;
   transaction_id?: string;
+  referral_code?: string;
 }
 
 export interface GuestDonationData {
@@ -13,6 +14,7 @@ export interface GuestDonationData {
   currency?: string;
   payment_method?: string;
   transaction_id?: string;
+  referral_code?: string;
 }
 
 export interface StandardDonationData {
@@ -77,6 +79,15 @@ class DonationService {
 
   async getRecentDonors(childId: string, limit: number = 10): Promise<any[]> {
     const response = await apiClient.get(`/donations/recent-donors/${childId}?k=${limit}`);
+    return response.data;
+  }
+
+  async validateReferralCode(referralCode: string): Promise<{
+    valid: boolean;
+    referrer_name?: string;
+    message: string;
+  }> {
+    const response = await apiClient.get(`/donations/validate-referral/${referralCode}`);
     return response.data;
   }
 }
