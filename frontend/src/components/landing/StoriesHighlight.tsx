@@ -131,7 +131,7 @@ export default function StoriesHighlight() {
                 </div>
 
                 {/* Text Content */}
-                <div className={`flex-1 max-w-md ${index % 2 === 0 ? 'md:text-left' : 'md:text-right'}`}>
+                <div className={`flex-1 ${index % 2 === 0 ? 'md:text-left' : 'md:text-right'}`}>
                   <div className={`space-y-4 ${index % 2 === 1 ? 'md:ml-auto' : ''}`}>
                     <div>
                       <p className="text-sm font-semibold text-orange-500 uppercase tracking-wider mb-2">Impact Story</p>
