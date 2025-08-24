@@ -68,7 +68,6 @@ export default function DonationSuccessPage() {
 
   const handleDownloadReceipt = () => {
     // In production, this would generate a PDF receipt
-    console.log('Downloading receipt for donation:', donationId);
   };
 
   return (

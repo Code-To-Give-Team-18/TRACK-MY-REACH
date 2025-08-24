@@ -53,13 +53,18 @@ export default function ProfilePage() {
   useEffect(() => {
     // Fetch user's referral stats when user is loaded
     if (user?.id) {
+      console.log('Fetching referral stats for user:', user.id);
       setReferralStatsLoading(true);
       referralService.getUserStats(user.id)
         .then(data => {
+          console.log('Referral stats received:', data);
           setReferralStats(data);
         })
         .catch(error => {
           console.error('Error fetching referral stats:', error);
+          console.error('Error details:', error.response?.data || error.message);
+          // Set default values on error so the UI still shows
+          setReferralStats(null);
         })
         .finally(() => {
           setReferralStatsLoading(false);
