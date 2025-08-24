@@ -207,15 +207,15 @@ export default function FeaturedChild() {
 
             {/* Action Buttons - More Inviting */}
             <div className="flex flex-col sm:flex-row gap-4 pt-6">
-              <Link href={`/children/${currentChild.id}`} className="flex-1">
+              <Link href={`/stories/${currentChild.id}`} className="flex-1">
                 <Button className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white py-6 rounded-full text-lg font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
                   <Heart className="mr-2 h-5 w-5 animate-pulse" />
                   Help {currentChild.name} Thrive
                 </Button>
               </Link>
-              <Link href="/children" className="flex-1">
+              <Link href="/stories" className="flex-1">
                 <Button className="w-full bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-300 py-6 rounded-full text-lg font-semibold shadow-md hover:shadow-lg transform hover:scale-105 transition-all">
-                  Meet More Children
+                  View More Stories
                   <ChevronRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>

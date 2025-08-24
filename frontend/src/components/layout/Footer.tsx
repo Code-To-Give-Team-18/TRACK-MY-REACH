@@ -97,8 +97,8 @@ export default function Footer() {
             <h5 className="font-bold text-gray-800 mb-4">Get Involved</h5>
             <ul className="space-y-3">
               <li>
-                <Link href="/children" className="text-gray-600 hover:text-orange-600 transition-colors">
-                  Support a Child
+                <Link href="/stories" className="text-gray-600 hover:text-orange-600 transition-colors">
+                  View Stories
                 </Link>
               </li>
               <li>
