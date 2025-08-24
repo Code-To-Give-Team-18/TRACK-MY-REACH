@@ -48,7 +48,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           src={post.video_link} width="500" height="500" autoPlay muted loop
         />
       </div>
-      <div className="flex flex-col gap-1 justify-center">
+      <div className="flex flex-col gap-1 justify-center w-[500px]">
         <p>{post.title}</p>
         <div className="flex flex-row gap-3">
           <button 
@@ -57,7 +57,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           >
             {post.child_name}
           </button>
-          <FollowButton status={FollowStatus.NOT_FOLLOWING} />
+          <FollowButton status={post.follow_status} childId={post.child_id}/>
         </div>
         <p>{post.caption}</p>
         <div className="flex flex-row gap-3">
