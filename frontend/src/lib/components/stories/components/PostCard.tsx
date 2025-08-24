@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import { FollowButton, FollowStatus } from "./FollowButton";
+import { getBackendUrl } from '@/utils/url.utils';
 
 export interface Post {
   id: string;
@@ -45,7 +46,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         <video 
           className="w-[500px] h-[600px] object-cover"
           style={{ borderRadius: "12px" }}  
-          src={post.video_link} width="500" height="500" autoPlay muted loop
+          src={post.video_link ? getBackendUrl(post.video_link) : ''} width="500" height="500" autoPlay muted loop
         />
       </div>
       <div className="flex flex-col gap-1 justify-center w-[500px]">
