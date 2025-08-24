@@ -308,6 +308,17 @@ class DonationsTable:
             summary.unique_donors = unique or 0
             summary.updated_at = datetime.now()
             summary.save()
+    
+    def get_user_total(user_id: str) -> float:
+        from peewee import fn
+        total = (
+            Donation.select(fn.SUM(Donation.amount))
+            .where(
+                (Donation.user_id == user_id) &
+                (Donation.status == "completed")
+            ).scalar()
+        )
+        return float(total) if total else 0.0
 
 
     def get_region_summaries(self, period: str = 'all_time') -> list:
