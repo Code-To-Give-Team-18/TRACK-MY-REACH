@@ -17,6 +17,8 @@ import random
 from apps.webui.models.children import Children
 from apps.webui.models.users import Users
 from utils.utils import get_verified_user  # to require login
+from utils.utils import get_current_user  # to require admin for certain actions
+
 
 from fastapi import Response, Request
 from fastapi import Depends, FastAPI, HTTPException, status
@@ -48,7 +50,7 @@ def get_popular_children(limit: int = 3):
 # Follow a child
 ############################
 @router.post("/{child_id}/follow")
-def follow_child(child_id: str, user_id: str, user=Depends(get_verified_user)):
+def follow_child(child_id: str, user_id: str, user=Depends(get_current_user)):
     """Make a user follow a child. Expects user_id in query/body"""
     # Check child exists
     child = Children.get_child_by_id(child_id)
