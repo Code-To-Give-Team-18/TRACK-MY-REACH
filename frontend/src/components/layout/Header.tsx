@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -99,14 +100,18 @@ export default function Header() {
               href="/"
               className="inline-flex items-center gap-3 group"
             >
-              <div className="relative">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-orange-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                  <Heart className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+              <div className="relative w-10 h-10 lg:w-12 lg:h-12">
+                <Image
+                  src="/logo.png"
+                  alt="Project REACH Logo"
+                  width={48}
+                  height={48}
+                  className="object-contain group-hover:scale-105 transition-transform"
+                  priority
+                />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-lg lg:text-xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
+                <h1 className="text-lg lg:text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   REACH
                 </h1>
                 <p className="text-xs text-gray-600">Every Child Matters</p>
@@ -121,7 +126,7 @@ export default function Header() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`flex items-center gap-2 text-gray-700 hover:text-orange-600 transition-colors font-medium ${pathname === item.href ? 'text-orange-600' : ''
+                  className={`flex items-center gap-2 text-gray-700 hover:text-green-600 transition-colors font-medium ${pathname === item.href ? 'text-green-600' : ''
                     }`}
                 >
                   <item.icon className="w-4 h-4" />
@@ -135,7 +140,7 @@ export default function Header() {
           <div className="hidden md:flex items-center justify-end gap-3 lg:gap-4 flex-shrink-0 w-40 lg:w-48">
             <Link href="/checkout_iv">
               <Button
-                className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-full px-4 lg:px-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-full px-4 lg:px-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                 size="sm"
               >
                 <Heart className="w-4 h-4 mr-1 lg:mr-2 animate-pulse" />
@@ -147,7 +152,7 @@ export default function Header() {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-semibold text-sm hover:shadow-lg transition-shadow"
+                  className="w-9 h-9 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm hover:shadow-lg transition-shadow"
                 >
                   {getUserInitials(user.name || 'U')}
                 </button>
@@ -164,7 +169,7 @@ export default function Header() {
                     >
                       <div className="p-4 border-b border-gray-100">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-semibold">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-semibold">
                             {getUserInitials(user.name || 'U')}
                           </div>
                           <div>
@@ -178,7 +183,7 @@ export default function Header() {
                         <Link
                           href="/profile"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
+                          className="flex items-center gap-3 px-4 py-2 hover:bg-green-50 transition-colors"
                         >
                           <User className="w-4 h-4 text-gray-600" />
                           <span className="text-gray-700">My Profile</span>
@@ -188,7 +193,7 @@ export default function Header() {
                           <Link
                             href="/dashboard"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
+                            className="flex items-center gap-3 px-4 py-2 hover:bg-green-50 transition-colors"
                           >
                             <LayoutDashboard className="w-4 h-4 text-gray-600" />
                             <span className="text-gray-700">Admin Dashboard</span>
@@ -201,7 +206,7 @@ export default function Header() {
                           <Link
                             href="/post-management"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
+                            className="flex items-center gap-3 px-4 py-2 hover:bg-green-50 transition-colors"
                           >
                             <Plus className="w-4 h-4 text-gray-600" />
                             <span className="text-gray-700">Post Management</span>
@@ -212,7 +217,7 @@ export default function Header() {
                           <Link
                             href="/children-management"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
+                            className="flex items-center gap-3 px-4 py-2 hover:bg-green-50 transition-colors"
                           >
                             <HandHeart className="w-4 h-4 text-gray-600" />
                             <span className="text-gray-700">Children Management</span>
@@ -223,7 +228,7 @@ export default function Header() {
                         <Link
                           href="/settings"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
+                          className="flex items-center gap-3 px-4 py-2 hover:bg-green-50 transition-colors"
                         >
                           <Settings className="w-4 h-4 text-gray-600" />
                           <span className="text-gray-700">Settings</span>
@@ -284,7 +289,7 @@ export default function Header() {
                     key={item.label}
                     href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-orange-50 transition-colors ${pathname === item.href ? 'bg-orange-50 text-orange-600' : 'text-gray-700'
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-green-50 transition-colors ${pathname === item.href ? 'bg-green-50 text-green-600' : 'text-gray-700'
                       }`}
                   >
                     <item.icon className="w-5 h-5" />
@@ -299,7 +304,7 @@ export default function Header() {
                   <>
                     <div className="bg-gray-50 rounded-xl p-4 mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white font-semibold text-lg">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-semibold text-lg">
                           {getUserInitials(user.name || 'U')}
                         </div>
                         <div>
@@ -373,7 +378,7 @@ export default function Header() {
                 )}
 
                 <Link href="/checkout_iv" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-full shadow-lg">
+                  <Button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-full shadow-lg">
                     <Heart className="w-4 h-4 mr-2 animate-pulse" />
                     Donate Now
                   </Button>

@@ -271,7 +271,7 @@ export default function DonationSuccessPage() {
                 Back to Home
               </Link>
               <Link
-                href="/dashboard"
+                href="/referrals"
                 className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-indigo-700 transition-all flex items-center justify-center gap-2"
               >
                 View Your Impact

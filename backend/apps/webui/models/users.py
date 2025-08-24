@@ -90,6 +90,8 @@ class UsersTable:
         self.db.create_tables([User], safe=True)
         # Populate referral codes for existing users without them
         self._ensure_referral_codes()
+        # Seed default users for demo
+        self.seed_default_users()
 
     def generate_referral_code(self, name: str = None) -> str:
         """Generate a unique referral code"""
@@ -360,6 +362,200 @@ class UsersTable:
         except Exception as e:
             # Table might not exist yet during initial migration
             pass
+
+    def seed_default_users(self):
+        """Seed default users data for demo purposes"""
+        default_users = [
+            {
+                'id': 'user-001',
+                'name': 'Tingxiao Shi',
+                'email': 'tingxiao@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://lh3.googleusercontent.com/ogw/AF2bZyh1h5PPERMFg2qEk_qHp4Qtlkx-cZhH1dmVeJb8B_rPuw=s64-c-mo',
+                'referral_code': 'JOHN123',
+                'referral_count': 3,
+                'referral_donations_total': 1500.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-002',
+                'name': 'Sarah Johnson',
+                'email': 'sarah.johnson@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/sarah/200/200',
+                'referral_code': 'SARAH456',
+                'referral_count': 5,
+                'referral_donations_total': 2750.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-003',
+                'name': 'Michael Chen',
+                'email': 'michael.chen@example.com',
+                'role': 'admin',
+                'profile_image_url': 'https://picsum.photos/seed/michael/200/200',
+                'referral_code': 'MIKE789',
+                'referral_count': 8,
+                'referral_donations_total': 4200.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-004',
+                'name': 'Emily Davis',
+                'email': 'emily.davis@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/emily/200/200',
+                'referral_code': 'EMILY321',
+                'referral_count': 2,
+                'referral_donations_total': 800.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-005',
+                'name': 'David Lee',
+                'email': 'david.lee@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/david/200/200',
+                'referral_code': 'DAVID654',
+                'referral_count': 6,
+                'referral_donations_total': 3100.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-006',
+                'name': 'Jessica Wong',
+                'email': 'jessica.wong@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/jessica/200/200',
+                'referral_code': 'JESS987',
+                'referral_count': 4,
+                'referral_donations_total': 1900.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-007',
+                'name': 'Robert Taylor',
+                'email': 'robert.taylor@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/robert/200/200',
+                'referral_code': 'ROB147',
+                'referral_count': 1,
+                'referral_donations_total': 450.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-008',
+                'name': 'Amanda Liu',
+                'email': 'amanda.liu@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/amanda/200/200',
+                'referral_code': 'AMANDA258',
+                'referral_count': 7,
+                'referral_donations_total': 3650.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-009',
+                'name': 'Kevin Park',
+                'email': 'kevin.park@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/kevin/200/200',
+                'referral_code': 'KEVIN369',
+                'referral_count': 3,
+                'referral_donations_total': 1250.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-010',
+                'name': 'Lisa Thompson',
+                'email': 'lisa.thompson@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/lisa/200/200',
+                'referral_code': 'LISA741',
+                'referral_count': 9,
+                'referral_donations_total': 5100.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-011',
+                'name': 'James Wilson',
+                'email': 'james.wilson@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/james/200/200',
+                'referral_code': 'JAMES852',
+                'referral_count': 2,
+                'referral_donations_total': 900.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-012',
+                'name': 'Michelle Chang',
+                'email': 'michelle.chang@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/michelle/200/200',
+                'referral_code': 'MICH963',
+                'referral_count': 5,
+                'referral_donations_total': 2400.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-013',
+                'name': 'Christopher Brown',
+                'email': 'chris.brown@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/chris/200/200',
+                'referral_code': 'CHRIS159',
+                'referral_count': 4,
+                'referral_donations_total': 1750.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-014',
+                'name': 'Rachel Zhang',
+                'email': 'rachel.zhang@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/rachel/200/200',
+                'referral_code': 'RACHEL357',
+                'referral_count': 6,
+                'referral_donations_total': 2900.00,
+                'api_key': None,
+                'oauth_sub': None
+            },
+            {
+                'id': 'user-015',
+                'name': 'Daniel Martinez',
+                'email': 'daniel.martinez@example.com',
+                'role': 'user',
+                'profile_image_url': 'https://picsum.photos/seed/daniel/200/200',
+                'referral_code': 'DAN486',
+                'referral_count': 3,
+                'referral_donations_total': 1600.00,
+                'api_key': None,
+                'oauth_sub': None
+            }
+        ]
+        
+        for user_data in default_users:
+            existing = User.get_or_none(User.id == user_data['id'])
+            if not existing:
+                # Set timestamps
+                user_data['last_active_at'] = int(time.time())
+                user_data['created_at'] = int(time.time())
+                user_data['updated_at'] = int(time.time())
+                User.create(**user_data)
 
 
 Users = UsersTable(DB)
