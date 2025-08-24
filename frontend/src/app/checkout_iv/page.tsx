@@ -1,17 +1,17 @@
 'use client';
 
-import React, { Suspense, useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment } from '@react-three/drei';
 import { DeskScene } from '@/components/digital-twin-v2/DeskScene';
-import { useDonationTiers } from '@/hooks/useDonationTiers';
 import { useSpring, animated } from '@react-spring/three';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ArrowLeft } from 'lucide-react';
 import * as THREE from 'three';
-import { useRouter } from 'next/navigation';
 import { ErrorBoundary } from 'react-error-boundary';
 import { preloadModels } from '@/components/digital-twin-v2/preloadModels';
+import Link from 'next/link';
 
 function DynamicLighting({ donationAmount }: { donationAmount: number }) {
   const lightIntensity = Math.min(1 + donationAmount / 200, 2.5);
@@ -41,7 +41,6 @@ function DynamicLighting({ donationAmount }: { donationAmount: number }) {
 }
 
 const ClassroomScene = React.memo(({ donationAmount }: { donationAmount: number }) => {
-  // Memoize Canvas props to prevent unnecessary re-renders
   const canvasProps = useMemo(() => ({
     shadows: "soft" as const,
     dpr: [1, 1.5] as [number, number],
@@ -88,7 +87,6 @@ const ClassroomScene = React.memo(({ donationAmount }: { donationAmount: number 
   );
 });
 
-// Error fallback component
 function Scene3DErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-white p-4">
@@ -104,13 +102,17 @@ function Scene3DErrorFallback({ error, resetErrorBoundary }: { error: Error; res
   );
 }
 
-export function CompactImpactVisualizer() {
-  const [donationAmount, setDonationAmount] = useState(0);
+export default function CheckoutIVPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const childId = searchParams.get('childId');
+  const initialAmount = searchParams.get('amount');
+  
+  const [donationAmount, setDonationAmount] = useState(initialAmount ? Number(initialAmount) : 0);
   const [userInteracted, setUserInteracted] = useState(false);
   const [debouncedAmount, setDebouncedAmount] = useState(0);
   const animationRef = useRef<number | undefined>();
   const debounceRef = useRef<NodeJS.Timeout>();
-  const router = useRouter();
   
   // Preload models on component mount
   useEffect(() => {
@@ -121,8 +123,8 @@ export function CompactImpactVisualizer() {
   
   // Auto-animate slider until user interaction
   useEffect(() => {
-    if (!userInteracted) {
-      const animationSequence = [0, 50, 150, 300, 500, 800, 1000, 500, 300, 150, 50];
+    if (!userInteracted && !initialAmount) {
+      const animationSequence = [0, 50, 150, 300, 500, 800, 1000, 800, 500, 300, 150, 50];
       let sequenceIndex = 0;
       let targetValue = animationSequence[0];
       let currentAnimValue = 0;
@@ -131,7 +133,7 @@ export function CompactImpactVisualizer() {
       const animate = (timestamp: number) => {
         if (!lastTimestamp) lastTimestamp = timestamp;
         const deltaTime = timestamp - lastTimestamp;
-        lastTimestamp = timestamp;  
+        lastTimestamp = timestamp;
         
         // Smooth interpolation towards target
         const speed = 4.5; // Increased for faster animation
@@ -168,9 +170,9 @@ export function CompactImpactVisualizer() {
         }
       };
     }
-  }, [userInteracted]);
+  }, [userInteracted, initialAmount]);
   
-  // Debounce the 3D scene updates to prevent rapid re-renders
+  // Debounce the 3D scene updates
   useEffect(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -178,7 +180,7 @@ export function CompactImpactVisualizer() {
     
     debounceRef.current = setTimeout(() => {
       setDebouncedAmount(donationAmount);
-    }, 50); // Reduced delay for better synchronization
+    }, 50);
     
     return () => {
       if (debounceRef.current) {
@@ -225,28 +227,62 @@ export function CompactImpactVisualizer() {
     return items;
   };
 
-  const handleDonateClick = () => {
+  const handleProceedToCheckout = () => {
     if (donationAmount > 0) {
-      // Navigate to checkout_iv first to show impact visualization
-      router.push(`/checkout_iv?amount=${donationAmount}&mode=quick`);
+      // Build the checkout URL with all necessary parameters
+      const checkoutUrl = new URL('/checkout', window.location.origin);
+      if (childId) checkoutUrl.searchParams.set('childId', childId);
+      checkoutUrl.searchParams.set('amount', donationAmount.toString());
+      
+      router.push(checkoutUrl.toString());
     }
   };
 
+  const handleBack = () => {
+    if (childId) {
+      router.push(`/child?id=${childId}`);
+    } else {
+      router.back();
+    }
+  };
 
   return (
-    <section className="relative w-full py-16 bg-gradient-to-b from-gray-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Back</span>
+            </button>
+            <h1 className="text-xl font-semibold text-gray-900">
+              
+            </h1>
+            <div className="w-20"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Section Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             See Your Impact in Real-Time
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Watch how your donation fills a K3 student's desk with essential learning materials in Hong Kong
+            {childId ? 
+              "Watch how your donation directly helps this child's education" :
+              "Watch how your donation fills a K3 student's desk with essential learning materials"
+            }
           </p>
         </div>
 
-        {/* Main Content Grid */}
+        {/* Visualization Grid */}
         <div className="grid lg:grid-cols-2 gap-8 items-start">
           {/* 3D Visualization */}
           <div className="relative h-[500px] bg-gray-900 rounded-2xl overflow-hidden shadow-2xl">
@@ -270,85 +306,87 @@ export function CompactImpactVisualizer() {
           </div>
 
           {/* Controls Panel */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 h-[500px] flex flex-col justify-between overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-xl p-8 h-[500px] flex flex-col justify-between">
             <div className="flex-1 flex flex-col">
               {/* Amount Display */}
               <div className="text-center mb-4">
-              <motion.div
-                key={donationAmount}
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                className={`inline-block px-6 py-3 rounded-lg bg-gradient-to-r ${getTierColor(donationAmount)}`}
-              >
-                <span className="text-white text-4xl font-bold">
-                  HK${donationAmount.toFixed(0)}
-                </span>
-              </motion.div>
-            </div>
+                <motion.div
+                  key={donationAmount}
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  className={`inline-block px-6 py-3 rounded-lg bg-gradient-to-r ${getTierColor(donationAmount)}`}
+                >
+                  <span className="text-white text-4xl font-bold">
+                    HK${donationAmount.toFixed(0)}
+                  </span>
+                </motion.div>
+              </div>
 
               {/* Slider */}
               <div className="mb-4">
-              <input
-                type="range"
-                min="0"
-                max="1000"
-                value={donationAmount}
-                onChange={(e) => handleUserInteraction(Number(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, rgb(59 130 246) 0%, rgb(59 130 246) ${(donationAmount / 1000) * 100}%, rgb(229 231 235) ${(donationAmount / 1000) * 100}%, rgb(229 231 235) 100%)`
-                }}
-              />
-              <div className="flex justify-between mt-2">
-                <span className="text-gray-500 text-xs">HK$0</span>
-                <span className="text-gray-500 text-xs">HK$1000</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1000"
+                  value={donationAmount}
+                  onChange={(e) => handleUserInteraction(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, rgb(59 130 246) 0%, rgb(59 130 246) ${(donationAmount / 1000) * 100}%, rgb(229 231 235) ${(donationAmount / 1000) * 100}%, rgb(229 231 235) 100%)`
+                  }}
+                />
+                <div className="flex justify-between mt-2">
+                  <span className="text-gray-500 text-xs">HK$0</span>
+                  <span className="text-gray-500 text-xs">HK$1000</span>
+                </div>
               </div>
-            </div>
 
               {/* Quick Amount Buttons */}
               <div className="grid grid-cols-5 gap-2 mb-4">
-              {quickAmounts.map((amount) => (
-                <motion.button
-                  key={amount}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleUserInteraction(amount)}
-                  className={`py-2 rounded-lg text-sm font-medium transition-all ${
-                    donationAmount === amount
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  HK${amount}
-                </motion.button>
-              ))}
-            </div>
+                {quickAmounts.map((amount) => (
+                  <motion.button
+                    key={amount}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleUserInteraction(amount)}
+                    className={`py-2 rounded-lg text-sm font-medium transition-all ${
+                      donationAmount === amount
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    HK${amount}
+                  </motion.button>
+                ))}
+              </div>
 
               {/* Impact Preview */}
               <div className="flex-1 min-h-0">
                 {donationAmount > 0 ? (
                   <div className="bg-blue-50 rounded-lg p-4 h-full overflow-y-auto">
-                <p className="text-gray-700 text-sm font-medium mb-2">You&apos;re providing:</p>
-                <div className="space-y-1">
-                  <AnimatePresence mode="popLayout">
-                    {getImpactItems(donationAmount).map((item, i) => (
-                      <motion.div
-                        key={item}
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: 20, opacity: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className="text-gray-700 text-sm"
-                      >
-                        {item}
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              </div>
+                    <p className="text-gray-700 text-sm font-medium mb-2">You&apos;re providing:</p>
+                    <div className="space-y-1">
+                      <AnimatePresence mode="popLayout">
+                        {getImpactItems(donationAmount).map((item, i) => (
+                          <motion.div
+                            key={item}
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: 20, opacity: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            className="text-gray-700 text-sm"
+                          >
+                            {item}
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  </div>
                 ) : (
                   <div className="bg-gray-50 rounded-lg p-4 h-full flex items-center justify-center">
-                    <p className="text-gray-500 text-sm text-center">Adjust the slider to see how your donation helps</p>
+                    <p className="text-gray-500 text-sm text-center">
+                      Adjust the slider to see how your donation helps
+                    </p>
                   </div>
                 )}
               </div>
@@ -359,11 +397,11 @@ export function CompactImpactVisualizer() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={handleDonateClick}
+                onClick={handleProceedToCheckout}
                 className={`w-full py-3 rounded-lg font-medium text-white transition-all bg-gradient-to-r ${getTierColor(donationAmount)} shadow-lg`}
                 disabled={donationAmount === 0}
               >
-                {donationAmount === 0 ? 'Adjust Amount to Start' : 'Make This Reality'}
+                {donationAmount === 0 ? 'Adjust Amount to Continue' : 'Make This Reality'}
               </motion.button>
 
               {/* Social Proof */}
@@ -375,6 +413,6 @@ export function CompactImpactVisualizer() {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

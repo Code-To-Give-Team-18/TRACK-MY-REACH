@@ -133,7 +133,7 @@ export default function Header() {
 
           {/* Desktop Donate Section - Fixed Width for Balance */}
           <div className="hidden md:flex items-center justify-end gap-3 lg:gap-4 flex-shrink-0 w-40 lg:w-48">
-            <Link href="/checkout">
+            <Link href="/checkout_iv">
               <Button
                 className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-full px-4 lg:px-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                 size="sm"
@@ -372,7 +372,7 @@ export default function Header() {
                   </Link>
                 )}
 
-                <Link href="/checkout" onClick={() => setIsMobileMenuOpen(false)}>
+                <Link href="/checkout_iv" onClick={() => setIsMobileMenuOpen(false)}>
                   <Button className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-full shadow-lg">
                     <Heart className="w-4 h-4 mr-2 animate-pulse" />
                     Donate Now

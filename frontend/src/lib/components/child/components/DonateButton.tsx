@@ -9,7 +9,7 @@ export const DonateButton = () => {
   const { child } = useChildContext();
 
   const handleDonationRedirect = () : void => {
-    router.push(`/checkout?childId=${child?.id}`);
+    router.push(`/checkout_iv?childId=${child?.id}`);
   };
 
   return (
