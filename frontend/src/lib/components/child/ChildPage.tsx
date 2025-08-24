@@ -7,11 +7,13 @@ import { ChildProvider, useChildContext } from "./contexts/ChildContext";
 import { useEffect, useState } from "react";
 import { Post, PostCard } from "../stories/components/PostCard";
 import { DonateButton } from "./components/DonateButton";
+import "./styles/scrollbar.css";
 
 const Posts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [currentPostIndex, setCurrentPostIndex] = useState(0);
   const { child } = useChildContext();
 
   const fetchPost = async (pageNumber: number, pageSize: number) => {
@@ -35,21 +37,62 @@ const Posts = () => {
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    
+    // Update current post index based on scroll position
+    const postHeight = clientHeight;
+    const newIndex = Math.round(scrollTop / postHeight);
+    setCurrentPostIndex(newIndex);
+    
+    // Load more posts when near the end
     if (scrollHeight - scrollTop <= clientHeight + 2000 && hasMore) {
       fetchPost(pageNumber, 10);
     }
   };
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-screen snap-start relative">
       <h1 className="text-4xl text-black font-extrabold p-10 text-center">View my updates here</h1>
-      <div
-        className="flex flex-col overflow-y-scroll snap-y snap-mandatory h-full max-h-dvh"
-        onScroll={handleScroll}
-      >
-        {posts.map((post) => {
-          return <PostCard post={post} key={post.id}/>
-        })}
+      <div className="relative h-[calc(100vh-120px)]">
+        <div
+          className="flex flex-col overflow-y-scroll snap-y snap-mandatory h-full scrollbar-hide"
+          onScroll={handleScroll}
+          style={{ scrollBehavior: 'smooth' }}
+        >
+          {posts.map((post) => {
+            return (
+              <div className="snap-start min-h-full" key={post.id}>
+                <PostCard post={post} />
+              </div>
+            )
+          })}
+        </div>
+        
+        {/* Vertical Dot Indicators */}
+        {posts.length > 0 && (
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-2">
+            {posts.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  const scrollContainer = document.querySelector('.snap-y.snap-mandatory');
+                  if (scrollContainer) {
+                    const postHeight = scrollContainer.clientHeight;
+                    scrollContainer.scrollTo({
+                      top: index * postHeight,
+                      behavior: 'smooth'
+                    });
+                  }
+                }}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  index === currentPostIndex 
+                    ? 'bg-indigo-600 w-3 h-3' 
+                    : 'bg-gray-300 hover:bg-gray-400'
+                }`}
+                aria-label={`Go to post ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -89,7 +132,7 @@ const FanClub = () => {
   if (!child) return;
 
   return (
-    <div className="bg-white w-full min-h-[80dvh] py-8">
+    <div className="bg-white w-full h-full flex items-center justify-center py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -237,13 +280,22 @@ export const ChildPage = () => {
 
   return (
     <ChildProvider childId={childId}>
-      <div className="flex flex-col w-full justify-center items-center">
-        <div className="flex flex-col h-[80dvh] w-full">
+      <div className="h-screen overflow-y-scroll snap-y snap-mandatory scrollbar-hide">
+        {/* Child Info Section - Snap Point */}
+        <div className="min-h-screen snap-start flex flex-col justify-center items-center">
           <ChildInfo/>
         </div>
+        
+        {/* Posts Section - Snap Point with Internal Scroll */}
+        <div className="min-h-screen snap-start">
+          <Posts/>
+        </div>
+        
+        {/* Donation History Section - Snap Point */}
+        <div className="min-h-screen snap-start">
+          <FanClub/>
+        </div>
       </div>
-      <Posts/>
-      <FanClub/>
     </ChildProvider>
   );
 }
