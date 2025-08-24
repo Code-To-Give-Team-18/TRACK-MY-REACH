@@ -60,7 +60,7 @@
 			}
 		},
 		"enable_signup": true,
-		"default_user_role": "pending",
+		"default_user_role": "user",
 		"enable_community_sharing": true
 	},
 	"ollama": {
