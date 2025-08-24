@@ -196,6 +196,354 @@ class ChildrenTable:
         child.delete_instance()
         return True
 
+    def seed_default_children(self):
+        """Seed default children data for demo purposes"""
+        default_children = [
+            {
+                'id': 'child-001',
+                'region_id': 'central',
+                'name': 'Amy Wong',
+                'age': 8,
+                'school': 'Central Primary School',
+                'grade': 'K3',
+                'description': 'A bright and cheerful student who loves reading',
+                'bio': 'Amy is an enthusiastic K3 student at Central Primary School. Despite facing financial challenges at home, she maintains excellent attendance and shows great interest in learning English. She dreams of becoming a teacher one day to help other children learn.',
+                'video_link': 'https://example.com/videos/amy-story.mp4',
+                'picture_link': 'https://picsum.photos/seed/amy/400/400',
+                'follower_count': 45,
+                'total_received': 3500.00
+            },
+            {
+                'id': 'child-002',
+                'region_id': 'sham-shui-po',
+                'name': 'Kevin Chan',
+                'age': 7,
+                'school': 'Sham Shui Po District School',
+                'grade': 'K2',
+                'description': 'Passionate about art and creativity',
+                'bio': 'Kevin is a creative K2 student who loves drawing and painting. Coming from a single-parent household, he finds joy in art classes provided by Project REACH. His artwork has been featured in school exhibitions, bringing pride to his mother.',
+                'video_link': 'https://example.com/videos/kevin-art.mp4',
+                'picture_link': 'https://picsum.photos/seed/kevin/400/400',
+                'follower_count': 32,
+                'total_received': 2800.00
+            },
+            {
+                'id': 'child-003',
+                'region_id': 'kwun-tong',
+                'name': 'Sophie Lee',
+                'age': 9,
+                'school': 'Kwun Tong Community School',
+                'grade': 'K3',
+                'description': 'Excels in mathematics and problem-solving',
+                'bio': 'Sophie is a determined K3 student with exceptional mathematical abilities. Living in a subdivided flat with her grandparents, she participates in after-school tutoring through Project REACH. Her recent achievement in a district math competition has inspired her peers.',
+                'video_link': 'https://example.com/videos/sophie-math.mp4',
+                'picture_link': 'https://picsum.photos/seed/sophie/400/400',
+                'follower_count': 58,
+                'total_received': 4200.00
+            },
+            {
+                'id': 'child-004',
+                'region_id': 'yau-tsim-mong',
+                'name': 'Tommy Liu',
+                'age': 6,
+                'school': 'Yau Ma Tei Primary School',
+                'grade': 'K1',
+                'description': 'Active student who enjoys sports and teamwork',
+                'bio': 'Tommy is an energetic K1 student who loves sports, especially football. His family recently immigrated to Hong Kong, and Project REACH has helped him integrate into school life. He shows great team spirit and leadership potential despite his young age.',
+                'video_link': 'https://example.com/videos/tommy-sports.mp4',
+                'picture_link': 'https://picsum.photos/seed/tommy/400/400',
+                'follower_count': 28,
+                'total_received': 2100.00
+            },
+            {
+                'id': 'child-005',
+                'region_id': 'eastern',
+                'name': 'Emily Tam',
+                'age': 8,
+                'school': 'Eastern District Primary School',
+                'grade': 'K3',
+                'description': 'Musical talent with a love for singing',
+                'bio': 'Emily discovered her passion for music through Project REACH\'s music program. Living with her elderly grandmother, she practices singing daily and has performed at several school events. Her cheerful personality and beautiful voice bring joy to everyone around her.',
+                'video_link': 'https://example.com/videos/emily-singing.mp4',
+                'picture_link': 'https://picsum.photos/seed/emily/400/400',
+                'follower_count': 72,
+                'total_received': 5600.00
+            },
+            {
+                'id': 'child-006',
+                'region_id': 'wong-tai-sin',
+                'name': 'Michael Cheung',
+                'age': 7,
+                'school': 'Wong Tai Sin District School',
+                'grade': 'K2',
+                'description': 'Curious learner with interest in science',
+                'bio': 'Michael is a curious K2 student who loves asking "why" about everything. His family struggles financially, but Project REACH\'s science enrichment program has nurtured his natural curiosity. He recently won a prize for his simple science project about plants.',
+                'video_link': 'https://example.com/videos/michael-science.mp4',
+                'picture_link': 'https://picsum.photos/seed/michael/400/400',
+                'follower_count': 41,
+                'total_received': 3300.00
+            },
+            {
+                'id': 'child-007',
+                'region_id': 'sha-tin',
+                'name': 'Lily Chen',
+                'age': 9,
+                'school': 'Sha Tin Primary School',
+                'grade': 'K3',
+                'description': 'Dedicated student with strong language skills',
+                'bio': 'Lily is a hardworking K3 student who excels in both Chinese and English. Coming from a non-Cantonese speaking family, Project REACH\'s language support has been crucial for her academic success. She helps translate for new students and shows remarkable empathy.',
+                'video_link': 'https://example.com/videos/lily-language.mp4',
+                'picture_link': 'https://picsum.photos/seed/lily/400/400',
+                'follower_count': 53,
+                'total_received': 4100.00
+            },
+            {
+                'id': 'child-008',
+                'region_id': 'tsuen-wan',
+                'name': 'Ryan Ho',
+                'age': 6,
+                'school': 'Tsuen Wan Community School',
+                'grade': 'K1',
+                'description': 'Enthusiastic about technology and computers',
+                'bio': 'Ryan is the youngest tech enthusiast in his K1 class. Despite limited resources at home, he shows incredible aptitude for technology through Project REACH\'s digital literacy program. His ability to help classmates with tablets has earned him the nickname "Little IT Helper."',
+                'video_link': 'https://example.com/videos/ryan-tech.mp4',
+                'picture_link': 'https://picsum.photos/seed/ryan/400/400',
+                'follower_count': 38,
+                'total_received': 2900.00
+            },
+            {
+                'id': 'child-009',
+                'region_id': 'tuen-mun',
+                'name': 'Jessica Ng',
+                'age': 8,
+                'school': 'Tuen Mun District Primary',
+                'grade': 'K3',
+                'description': 'Aspiring writer with vivid imagination',
+                'bio': 'Jessica loves storytelling and creative writing. Living in temporary housing with her family, she finds escape through books provided by Project REACH. Her short stories about friendship and kindness have been compiled into a small book for the school library.',
+                'video_link': 'https://example.com/videos/jessica-writing.mp4',
+                'picture_link': 'https://picsum.photos/seed/jessica/400/400',
+                'follower_count': 47,
+                'total_received': 3700.00
+            },
+            {
+                'id': 'child-010',
+                'region_id': 'yuen-long',
+                'name': 'Daniel Lam',
+                'age': 7,
+                'school': 'Yuen Long Primary School',
+                'grade': 'K2',
+                'description': 'Nature lover with interest in environmental science',
+                'bio': 'Daniel is passionate about nature and the environment. Growing up near rural areas of Yuen Long, he participates in Project REACH\'s environmental education program. He has started a small recycling initiative at school and inspired his classmates to care for nature.',
+                'video_link': 'https://example.com/videos/daniel-nature.mp4',
+                'picture_link': 'https://picsum.photos/seed/daniel/400/400',
+                'follower_count': 35,
+                'total_received': 2600.00
+            },
+            {
+                'id': 'child-011',
+                'region_id': 'kwai-tsing',
+                'name': 'Grace Wong',
+                'age': 9,
+                'school': 'Kwai Tsing District School',
+                'grade': 'K3',
+                'description': 'Social butterfly who brings communities together',
+                'bio': 'Grace is known for her ability to make friends and bring people together. Despite language barriers at home, she excels in communication through Project REACH\'s social skills program. She organizes small study groups and helps shy classmates feel included.',
+                'video_link': 'https://example.com/videos/grace-social.mp4',
+                'picture_link': 'https://picsum.photos/seed/grace/400/400',
+                'follower_count': 64,
+                'total_received': 4900.00
+            },
+            {
+                'id': 'child-012',
+                'region_id': 'north',
+                'name': 'Peter Yip',
+                'age': 6,
+                'school': 'North District Primary School',
+                'grade': 'K1',
+                'description': 'Young athlete showing promise in swimming',
+                'bio': 'Peter discovered his love for swimming through Project REACH\'s sports program. Living near the border area, his family faces long commutes, but his dedication to training is unwavering. He recently earned his first swimming certificate, a proud moment for his family.',
+                'video_link': 'https://example.com/videos/peter-swimming.mp4',
+                'picture_link': 'https://picsum.photos/seed/peter/400/400',
+                'follower_count': 30,
+                'total_received': 2400.00
+            },
+            {
+                'id': 'child-013',
+                'region_id': 'sai-kung',
+                'name': 'Sarah Ma',
+                'age': 8,
+                'school': 'Sai Kung Central Primary',
+                'grade': 'K3',
+                'description': 'Budding marine biologist fascinated by ocean life',
+                'bio': 'Sarah lives near the coast and dreams of protecting marine life. Through Project REACH\'s environmental program, she has learned about ocean conservation. She leads beach cleanup activities with her classmates and has created an awareness campaign about plastic pollution.',
+                'video_link': 'https://example.com/videos/sarah-ocean.mp4',
+                'picture_link': 'https://picsum.photos/seed/sarah/400/400',
+                'follower_count': 56,
+                'total_received': 4300.00
+            },
+            {
+                'id': 'child-014',
+                'region_id': 'tai-po',
+                'name': 'Alex Fung',
+                'age': 7,
+                'school': 'Tai Po Government Primary',
+                'grade': 'K2',
+                'description': 'Young chef with culinary dreams',
+                'bio': 'Alex helps his grandmother at her small food stall after school. Project REACH\'s nutrition program has taught him about healthy cooking. He dreams of becoming a chef and has started a recipe book with simple, healthy meals that his classmates can make at home.',
+                'video_link': 'https://example.com/videos/alex-cooking.mp4',
+                'picture_link': 'https://picsum.photos/seed/alex/400/400',
+                'follower_count': 43,
+                'total_received': 3400.00
+            },
+            {
+                'id': 'child-015',
+                'region_id': 'islands',
+                'name': 'Maya Wong',
+                'age': 9,
+                'school': 'Lantau Island Primary School',
+                'grade': 'K3',
+                'description': 'Cultural ambassador bridging communities',
+                'bio': 'Maya lives on Lantau Island and faces long commutes to school. She speaks three languages and helps new immigrant families in her community. Through Project REACH, she has organized cultural exchange events that celebrate diversity and bring island communities together.',
+                'video_link': 'https://example.com/videos/maya-culture.mp4',
+                'picture_link': 'https://picsum.photos/seed/maya/400/400',
+                'follower_count': 68,
+                'total_received': 5200.00
+            },
+            {
+                'id': 'child-016',
+                'region_id': 'wan-chai',
+                'name': 'Oliver Tse',
+                'age': 6,
+                'school': 'Wan Chai District School',
+                'grade': 'K1',
+                'description': 'Young inventor with creative solutions',
+                'bio': 'Oliver loves building things from recycled materials. Living in a small apartment, he creates innovative storage solutions and toys. Project REACH\'s STEM program has nurtured his creativity, and his recent invention of a foldable study desk won praise from teachers.',
+                'video_link': 'https://example.com/videos/oliver-invention.mp4',
+                'picture_link': 'https://picsum.photos/seed/oliver/400/400',
+                'follower_count': 37,
+                'total_received': 2800.00
+            },
+            {
+                'id': 'child-017',
+                'region_id': 'southern',
+                'name': 'Chloe Yeung',
+                'age': 8,
+                'school': 'Aberdeen Primary School',
+                'grade': 'K3',
+                'description': 'Dancing through challenges with grace',
+                'bio': 'Chloe discovered her passion for dance through Project REACH\'s arts program. Despite her family\'s financial struggles, she practices daily in their small living room. Her performances at school events have inspired other students to pursue their artistic dreams.',
+                'video_link': 'https://example.com/videos/chloe-dance.mp4',
+                'picture_link': 'https://picsum.photos/seed/chloe/400/400',
+                'follower_count': 61,
+                'total_received': 4700.00
+            },
+            {
+                'id': 'child-018',
+                'region_id': 'kowloon-city',
+                'name': 'Nathan Kwok',
+                'age': 7,
+                'school': 'Kowloon City Primary',
+                'grade': 'K2',
+                'description': 'History enthusiast preserving local heritage',
+                'bio': 'Nathan loves learning about Hong Kong\'s history. Living near the old Kowloon Walled City site, he has become a young historian through Project REACH\'s cultural program. He gives tours to visitors and has created a digital archive of neighborhood stories from elderly residents.',
+                'video_link': 'https://example.com/videos/nathan-history.mp4',
+                'picture_link': 'https://picsum.photos/seed/nathan/400/400',
+                'follower_count': 49,
+                'total_received': 3800.00
+            },
+            {
+                'id': 'child-019',
+                'region_id': 'central',
+                'name': 'Isabella Chu',
+                'age': 9,
+                'school': 'Central District Primary',
+                'grade': 'K3',
+                'description': 'Young entrepreneur with big dreams',
+                'bio': 'Isabella started a small recycling business at school to help her family. Project REACH\'s entrepreneurship program has taught her basic business skills. She now manages a team of classmates who collect and sort recyclables, with proceeds going to school supplies for needy students.',
+                'video_link': 'https://example.com/videos/isabella-business.mp4',
+                'picture_link': 'https://picsum.photos/seed/isabella/400/400',
+                'follower_count': 74,
+                'total_received': 5800.00
+            },
+            {
+                'id': 'child-020',
+                'region_id': 'sham-shui-po',
+                'name': 'Jason Leung',
+                'age': 6,
+                'school': 'Sham Shui Po Primary',
+                'grade': 'K1',
+                'description': 'Robotics enthusiast building the future',
+                'bio': 'Jason is fascinated by robots and automation. Living in one of Hong Kong\'s poorest districts, he uses cardboard and simple materials to create robot models. Project REACH\'s robotics club has given him access to real programming tools, igniting his passion for technology.',
+                'video_link': 'https://example.com/videos/jason-robots.mp4',
+                'picture_link': 'https://picsum.photos/seed/jason/400/400',
+                'follower_count': 40,
+                'total_received': 3100.00
+            },
+            {
+                'id': 'child-021',
+                'region_id': 'kwun-tong',
+                'name': 'Zoe Pang',
+                'age': 8,
+                'school': 'Kwun Tong East Primary',
+                'grade': 'K3',
+                'description': 'Community gardener growing hope',
+                'bio': 'Zoe transformed a vacant lot near her housing estate into a community garden. Through Project REACH\'s urban farming program, she teaches neighbors how to grow vegetables. Her garden now feeds several families and has become a gathering place for the community.',
+                'video_link': 'https://example.com/videos/zoe-garden.mp4',
+                'picture_link': 'https://picsum.photos/seed/zoe/400/400',
+                'follower_count': 52,
+                'total_received': 4000.00
+            },
+            {
+                'id': 'child-022',
+                'region_id': 'yau-tsim-mong',
+                'name': 'Ethan Siu',
+                'age': 7,
+                'school': 'Mong Kok Primary School',
+                'grade': 'K2',
+                'description': 'Street artist beautifying neighborhoods',
+                'bio': 'Ethan channels his energy into street art and murals. Growing up in busy Mong Kok, he uses art to brighten his community. Project REACH\'s art program has provided him with proper materials and mentorship, leading to commissioned murals at local businesses.',
+                'video_link': 'https://example.com/videos/ethan-art.mp4',
+                'picture_link': 'https://picsum.photos/seed/ethan/400/400',
+                'follower_count': 46,
+                'total_received': 3600.00
+            },
+            {
+                'id': 'child-023',
+                'region_id': 'eastern',
+                'name': 'Luna Hui',
+                'age': 9,
+                'school': 'Chai Wan Primary School',
+                'grade': 'K3',
+                'description': 'Coding prodigy creating educational apps',
+                'bio': 'Luna taught herself basic coding using library computers. Through Project REACH\'s digital literacy program, she has developed simple educational games for younger students. Her math learning app is now used by several K1 classes in her school.',
+                'video_link': 'https://example.com/videos/luna-coding.mp4',
+                'picture_link': 'https://picsum.photos/seed/luna/400/400',
+                'follower_count': 67,
+                'total_received': 5100.00
+            },
+            {
+                'id': 'child-024',
+                'region_id': 'wong-tai-sin',
+                'name': 'Marcus Lo',
+                'age': 6,
+                'school': 'Wong Tai Sin Catholic Primary',
+                'grade': 'K1',
+                'description': 'Young photographer capturing life stories',
+                'bio': 'Marcus documents his community through photography using an old phone. Project REACH\'s media program has taught him composition and storytelling. His photo essay about elderly residents in his estate won a district competition and raised awareness about senior isolation.',
+                'video_link': 'https://example.com/videos/marcus-photos.mp4',
+                'picture_link': 'https://picsum.photos/seed/marcus/400/400',
+                'follower_count': 44,
+                'total_received': 3500.00
+            }
+        ]
+        
+        for child_data in default_children:
+            existing = Child.get_or_none(Child.id == child_data['id'])
+            if not existing:
+                # Extract region_id separately as it's a foreign key
+                region_id = child_data.pop('region_id')
+                Child.create(region=region_id, **child_data)
+
     def _child_to_dict(self, child) -> dict:
         if not child:
             return None
@@ -220,3 +568,4 @@ class ChildrenTable:
 
 
 Children = ChildrenTable(DB)
+Children.seed_default_children()
