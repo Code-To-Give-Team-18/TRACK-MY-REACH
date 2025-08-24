@@ -413,3 +413,88 @@ def donate_to_all(body: BulkDonateIn):
         raise
     except Exception as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Bulk split donation failed: {e}")
+
+# =========================
+# Admin routes
+# =========================
+
+@router.get("/all", response_model=List[DonationOut])
+def get_all_donations(
+    limit: int = Query(100, gt=0, le=1000),
+    user: User = Depends(get_current_user)
+):
+    """Get all donations (admin only)."""
+    if user.role != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    
+    return Donations.get_recent_donations(limit)
+
+@router.get("/recent", response_model=List[DonationOut])
+def get_recent_donations(
+    limit: int = Query(50, gt=0, le=500)
+):
+    """Get recent donations."""
+    return Donations.get_recent_donations(limit)
+
+@router.get("/user/{user_id}", response_model=List[DonationOut])
+def get_donations_by_user(user_id: str):
+    """Get donations by user ID."""
+    return Donations.get_donations_by_user(user_id)
+
+@router.get("/child/{child_id}", response_model=List[DonationOut])
+def get_donations_by_child(child_id: str):
+    """Get donations by child ID."""
+    return Donations.get_donations_by_child(child_id)
+
+@router.get("/region/{region_id}", response_model=List[DonationOut])
+def get_donations_by_region(region_id: str):
+    """Get donations by region ID."""
+    return Donations.get_donations_by_region(region_id)
+
+@router.get("/stats")
+def get_donation_stats(
+    region_id: Optional[str] = None,
+    child_id: Optional[str] = None
+):
+    """Get donation statistics."""
+    return Donations.get_donation_stats(region_id, child_id)
+
+@router.delete("/{donation_id}")
+def delete_donation(
+    donation_id: str,
+    user: User = Depends(get_current_user)
+):
+    """Delete a donation (admin only)."""
+    if user.role != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    
+    try:
+        donation = Donation.get(Donation.id == donation_id)
+        donation.delete_instance()
+        return {"message": "Donation deleted successfully"}
+    except Donation.DoesNotExist:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Donation not found")
+
+@router.patch("/{donation_id}/status", response_model=DonationOut)
+def update_donation_status(
+    donation_id: str,
+    status_update: dict,
+    user: User = Depends(get_current_user)
+):
+    """Update donation status (admin only)."""
+    if user.role != "admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    
+    try:
+        donation = Donation.get(Donation.id == donation_id)
+        new_status = status_update.get("status")
+        
+        if new_status not in ["pending", "completed", "failed"]:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid status")
+        
+        donation.status = new_status
+        donation.save()
+        
+        return Donations._donation_to_dict(donation)
+    except Donation.DoesNotExist:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Donation not found")

@@ -90,6 +90,44 @@ class DonationService {
     const response = await apiClient.get(`/donations/validate-referral/${referralCode}`);
     return response.data;
   }
+
+  // Admin methods
+  async getAllDonations(limit: number = 100): Promise<DonationResponse[]> {
+    const response = await apiClient.get(`/donations/all?limit=${limit}`);
+    return response.data;
+  }
+
+  async getDonationsByRegion(regionId: string): Promise<DonationResponse[]> {
+    const response = await apiClient.get(`/donations/region/${regionId}`);
+    return response.data;
+  }
+
+  async getDonationStats(regionId?: string, childId?: string): Promise<{
+    total_amount: number;
+    total_donations: number;
+    unique_donors: number;
+  }> {
+    const params = new URLSearchParams();
+    if (regionId) params.append('region_id', regionId);
+    if (childId) params.append('child_id', childId);
+    
+    const response = await apiClient.get(`/donations/stats?${params.toString()}`);
+    return response.data;
+  }
+
+  async getRecentDonations(limit: number = 50): Promise<DonationResponse[]> {
+    const response = await apiClient.get(`/donations/recent?limit=${limit}`);
+    return response.data;
+  }
+
+  async deleteDonation(donationId: string): Promise<void> {
+    await apiClient.delete(`/donations/${donationId}`);
+  }
+
+  async updateDonationStatus(donationId: string, status: string): Promise<DonationResponse> {
+    const response = await apiClient.patch(`/donations/${donationId}/status`, { status });
+    return response.data;
+  }
 }
 
 export const donationService = new DonationService();
