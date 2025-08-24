@@ -8,6 +8,9 @@ import { RegionSelector } from '@/components/checkout/RegionSelector';
 import { StudentSelector } from '@/components/checkout/StudentSelector';
 import { Heart, Sparkles, TrendingUp, Loader2 } from 'lucide-react';
 import { DonationMode } from '@/components/checkout/DonationModeSelector';
+import axios from 'axios';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 const regions = [
   { id: 'central', name: 'Central & Western', coordinates: [114.1544, 22.2824] as [number, number] },
@@ -42,16 +45,45 @@ function CheckoutContent() {
   const [selectedRegion, setSelectedRegion] = useState<string>('');
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [donationAmount, setDonationAmount] = useState<number>(100);
+  const [childData, setChildData] = useState<any>(null);
+  const [loadingChild, setLoadingChild] = useState(false);
   
+  // Fetch child data if childId is provided
+  useEffect(() => {
+    const fetchChildData = async () => {
+      if (childId && childId !== 'let-us-choose') {
+        setLoadingChild(true);
+        try {
+          const response = await axios.get(`${API_URL}/api/v1/children/${childId}`);
+          if (response.data) {
+            setChildData(response.data);
+            setSelectedStudent(childId);
+            // Set the region from child data
+            if (response.data.region_id) {
+              setSelectedRegion(response.data.region_id);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch child data:', error);
+          // If child not found, still set the student ID but no region
+          setSelectedStudent(childId);
+        } finally {
+          setLoadingChild(false);
+        }
+      } else if (childId === 'let-us-choose') {
+        setSelectedStudent('let-us-choose');
+      } else if (mode === 'quick') {
+        // For quick donations, no child is selected
+        setSelectedStudent(null);
+      }
+    };
+    
+    fetchChildData();
+  }, [childId, mode]);
+
   // Set initial values from URL parameters
   useEffect(() => {
-    if (childId) {
-      setSelectedStudent(childId);
-    } else if (mode === 'quick') {
-      // For quick donations, no child is selected
-      setSelectedStudent(null);
-    }
-    if (region) {
+    if (region && !childId) {
       setSelectedRegion(region);
     }
     if (amount) {
@@ -60,7 +92,7 @@ function CheckoutContent() {
         setDonationAmount(parsedAmount);
       }
     }
-  }, [childId, region, amount, mode]);
+  }, [region, amount, childId]);
 
 
   return (
@@ -82,6 +114,18 @@ function CheckoutContent() {
             </h1>
             <p className="text-lg text-gray-600">
               Your donation will be distributed to children who need it most across all regions
+            </p>
+          </div>
+        )}
+        
+        {/* Child-specific Header */}
+        {childData && mode !== 'quick' && (
+          <div className="max-w-4xl mx-auto mb-8 text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-3">
+              Support {childData.name}
+            </h1>
+            <p className="text-lg text-gray-600">
+              {childData.description || `Help ${childData.name} from ${childData.region_name || 'Hong Kong'} continue their education`}
             </p>
           </div>
         )}
@@ -184,6 +228,7 @@ function CheckoutContent() {
                 selectedRegion={selectedRegion}
                 selectedStudent={selectedStudent || 'let-us-choose'}
                 onStudentSelect={setSelectedStudent}
+                initialChildId={childId || undefined}
               />
             </div>
           </div>

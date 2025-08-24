@@ -74,6 +74,14 @@ def get_all_children():
 
 
 ############################
+# Get children by region
+############################
+@router.get("/region/{region_id}", response_model=List[dict])
+def get_children_by_region(region_id: str):
+    return Children.get_children_by_region(region_id)
+
+
+############################
 # Get specific child description
 ############################
 @router.get("/{child_id}/description")

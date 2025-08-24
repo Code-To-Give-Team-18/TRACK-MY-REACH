@@ -1,26 +1,34 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Heart, BookOpen, Star, Sparkles, GraduationCap } from 'lucide-react';
+import { User, Heart, BookOpen, Star, Sparkles, GraduationCap, Loader2 } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 interface StudentSelectorProps {
   selectedRegion: string;
   selectedStudent: string;
   onStudentSelect: (studentId: string) => void;
+  initialChildId?: string;
 }
 
-interface Student {
+interface Child {
   id: string;
   name: string;
-  age: number;
-  school: string;
-  story: string;
-  needs: string[];
-  image?: string;
+  age: number | null;
+  school: string | null;
+  grade: string | null;
+  description: string | null;
+  bio: string | null;
+  region_id: string;
+  region_name: string | null;
+  follower_count: number;
+  total_received: number;
 }
 
-// Mock data - in production, this would come from an API
-const mockStudents: Record<string, Student[]> = {
+// Mock data for fallback - in production, this would come from an API
+const mockStudents: Record<string, Child[]> = {
   'central': [
     {
       id: 'student-1',
@@ -59,36 +67,82 @@ const mockStudents: Record<string, Student[]> = {
   ],
 };
 
-export function StudentSelector({ selectedRegion, selectedStudent, onStudentSelect }: StudentSelectorProps) {
-  const [students, setStudents] = useState<Student[]>([]);
+export function StudentSelector({ selectedRegion, selectedStudent, onStudentSelect, initialChildId }: StudentSelectorProps) {
+  const [children, setChildren] = useState<Child[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
 
+  // Fetch specific child if childId is provided
   useEffect(() => {
-    if (selectedRegion && mockStudents[selectedRegion]) {
-      setStudents(mockStudents[selectedRegion]);
-    } else {
-      // Generate random students for regions without specific data
-      setStudents([
-        {
-          id: `student-${selectedRegion}-1`,
-          name: 'Student A',
-          age: 5,
-          school: 'Local Primary School',
-          story: 'A bright student who needs support to continue their education.',
-          needs: ['School supplies', 'Uniforms', 'Meal support'],
-        },
-        {
-          id: `student-${selectedRegion}-2`,
-          name: 'Student B',
-          age: 6,
-          school: 'District School',
-          story: 'An enthusiastic learner looking for educational resources.',
-          needs: ['Books', 'Stationery', 'Learning materials'],
-        },
-      ]);
-    }
-  }, [selectedRegion]);
+    const fetchChild = async () => {
+      if (initialChildId && initialChildId !== 'let-us-choose') {
+        setLoading(true);
+        try {
+          const response = await axios.get(`${API_URL}/api/v1/children/${initialChildId}`);
+          if (response.data) {
+            setSelectedChild(response.data);
+            onStudentSelect(initialChildId);
+            // Also fetch other children from the same region
+            if (response.data.region_id) {
+              const regionResponse = await axios.get(`${API_URL}/api/v1/children`);
+              const regionChildren = regionResponse.data.filter(
+                (child: Child) => child.region_id === response.data.region_id && child.id !== initialChildId
+              );
+              setChildren([response.data, ...regionChildren]);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch child:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchChild();
+  }, [initialChildId, onStudentSelect]);
 
-  if (!selectedRegion) {
+  // Fetch children by region
+  useEffect(() => {
+    const fetchChildrenByRegion = async () => {
+      if (selectedRegion && !initialChildId) {
+        setLoading(true);
+        try {
+          const response = await axios.get(`${API_URL}/api/v1/children/region/${selectedRegion}`);
+          setChildren(response.data);
+        } catch (error) {
+          console.error('Failed to fetch children:', error);
+          // Fallback to fetching all and filtering
+          try {
+            const allResponse = await axios.get(`${API_URL}/api/v1/children`);
+            const regionChildren = allResponse.data.filter(
+              (child: Child) => child.region_id === selectedRegion
+            );
+            setChildren(regionChildren);
+          } catch (fallbackError) {
+            console.error('Fallback also failed:', fallbackError);
+            // Use mock data as last resort
+            if (mockStudents[selectedRegion]) {
+              setChildren(mockStudents[selectedRegion]);
+            }
+          }
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchChildrenByRegion();
+  }, [selectedRegion, initialChildId]);
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <Loader2 className="h-8 w-8 text-gray-400 animate-spin mx-auto" />
+        <p className="text-gray-600 mt-4">Loading children...</p>
+      </div>
+    );
+  }
+
+  if (!selectedRegion && !initialChildId) {
     return (
       <div className="text-center py-12">
         <div className="relative inline-block">
@@ -160,17 +214,17 @@ export function StudentSelector({ selectedRegion, selectedStudent, onStudentSele
 
       {/* Student Cards */}
       <div className="space-y-3">
-        {students.map((student) => (
+        {children.map((child) => (
           <div
-            key={student.id}
-            onClick={() => onStudentSelect(student.id)}
+            key={child.id}
+            onClick={() => onStudentSelect(child.id)}
             className={`relative p-4 rounded-xl cursor-pointer transition-all transform hover:scale-[1.01] ${
-              selectedStudent === student.id
+              selectedStudent === child.id
                 ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-400 shadow-lg'
                 : 'bg-white/60 hover:bg-white/80 border border-gray-200/50'
             }`}
           >
-            {selectedStudent === student.id && (
+            {selectedStudent === child.id && (
               <div className="absolute -top-2 -right-2">
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full p-1 shadow-lg">
                   <Star className="h-3 w-3 text-white" />
@@ -180,41 +234,47 @@ export function StudentSelector({ selectedRegion, selectedStudent, onStudentSele
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0">
                 <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-sm ${
-                  selectedStudent === student.id
+                  selectedStudent === child.id
                     ? 'bg-gradient-to-br from-blue-400 to-indigo-500 text-white'
                     : 'bg-gradient-to-br from-purple-400 to-pink-400 text-white'
                 }`}>
-                  {student.name.charAt(0)}
+                  {child.name.charAt(0)}
                 </div>
               </div>
               <div className="flex-1">
                 <div className="flex items-start justify-between">
                   <div>
                     <h4 className={`font-semibold ${
-                      selectedStudent === student.id ? 'text-blue-900' : 'text-gray-900'
+                      selectedStudent === child.id ? 'text-blue-900' : 'text-gray-900'
                     }`}>
-                      {student.name}
+                      {child.name}
                     </h4>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      Age {student.age} • {student.school}
+                      {child.age ? `Age ${child.age}` : ''} {child.age && child.school ? '•' : ''} {child.school || child.grade || ''}
                     </p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-700 mt-2 line-clamp-2">{student.story}</p>
+                <p className="text-sm text-gray-700 mt-2 line-clamp-2">
+                  {child.description || child.bio || 'A bright student who needs support to continue their education.'}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {student.needs.slice(0, 3).map((need, index) => (
-                    <span
-                      key={index}
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        selectedStudent === student.id
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      <BookOpen className="h-2.5 w-2.5 mr-1" />
-                      {need}
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                    selectedStudent === child.id
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    <Heart className="h-2.5 w-2.5 mr-1" />
+                    {child.follower_count} supporters
+                  </span>
+                  {child.total_received > 0 && (
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      selectedStudent === child.id
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      HK${child.total_received.toFixed(0)} raised
                     </span>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
