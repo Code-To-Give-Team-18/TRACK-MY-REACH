@@ -13,6 +13,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import YouTubeUploadButton from '@/components/posts/YouTubeUploadButton';
+import { getBackendUrl } from '@/utils/url.utils';
 
 const postTypes = [
   { value: 'update', label: 'Update' },
@@ -464,10 +465,10 @@ export default function PostDetailPage() {
                           <div 
                             key={index} 
                             className="relative h-32 w-32 rounded overflow-hidden border border-gray-200 cursor-pointer group"
-                            onClick={() => openFullscreen(`${process.env.NEXT_PUBLIC_API_URL}${url}`, index)}
+                            onClick={() => openFullscreen(url ? getBackendUrl(url) : '', index)}
                           >
                             <Image
-                              src={`${process.env.NEXT_PUBLIC_API_URL}${url}`}
+                              src={url ? getBackendUrl(url) : ''}
                               alt={`Current image ${index + 1}`}
                               fill
                               className="object-cover"
@@ -688,10 +689,10 @@ export default function PostDetailPage() {
                     {post.media_urls.length === 1 ? (
                       <div 
                         className="relative h-full cursor-pointer group"
-                        onClick={() => openFullscreen(`${process.env.NEXT_PUBLIC_API_URL}${post.media_urls[0]}`, 0)}
+                        onClick={() => openFullscreen(post.media_urls[0] ? getBackendUrl(post.media_urls[0]) : '', 0)}
                       >
                         <Image
-                          src={`${process.env.NEXT_PUBLIC_API_URL}${post.media_urls[0]}`}
+                          src={post.media_urls[0] ? getBackendUrl(post.media_urls[0]) : ''}
                           alt={post.caption || 'Post image'}
                           fill
                           className="object-cover"
@@ -705,10 +706,10 @@ export default function PostDetailPage() {
                         <div 
                           key={index} 
                           className="relative h-64 bg-gray-200 rounded overflow-hidden cursor-pointer group"
-                          onClick={() => openFullscreen(`${process.env.NEXT_PUBLIC_API_URL}${url}`, index)}
+                          onClick={() => openFullscreen(url ? getBackendUrl(url) : '', index)}
                         >
                           <Image
-                            src={`${process.env.NEXT_PUBLIC_API_URL}${url}`}
+                            src={url ? getBackendUrl(url) : ''}
                             alt={`Post image ${index + 1}`}
                             fill
                             className="object-cover"

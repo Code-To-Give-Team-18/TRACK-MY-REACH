@@ -80,8 +80,17 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
         )}
       </div>
 
-      {/* Media Preview */}
-      {pictureUrl && (
+      {/* Media Preview - Prioritize video over image */}
+      {videoUrl ? (
+        <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden bg-black">
+          <video
+            src={videoUrl}
+            controls
+            className="w-full h-full object-contain"
+            preload="metadata"
+          />
+        </div>
+      ) : pictureUrl ? (
         <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden bg-gray-100">
           <Image
             src={pictureUrl}
@@ -91,7 +100,7 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         </div>
-      )}
+      ) : null}
 
       {/* Post Info */}
       <div className="space-y-2">
@@ -149,10 +158,6 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
           )}
         </div>
 
-        {/* Video Button */}
-        {videoUrl && (
-          <WatchVideoButton videoUrl={videoUrl} />
-        )}
       </div>
     </motion.div>
   );
