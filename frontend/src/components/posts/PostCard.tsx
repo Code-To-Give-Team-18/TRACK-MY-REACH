@@ -63,7 +63,7 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
       <div className="absolute top-2 right-2 flex gap-2 z-10">
         <Link
           href={`/post-management/${post.id}`}
-          className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           title="View Details"
         >
           <Eye className="w-4 h-4" />
@@ -123,7 +123,7 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
 
         {/* Post Type Badge */}
         {post.post_type && (
-          <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+          <span className="inline-block px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-800 rounded-full">
             {post.post_type}
           </span>
         )}

@@ -296,7 +296,7 @@ export default function PostDetailPage() {
 
   if (loadingPost) {
     return (
-      <section className="py-20 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 min-h-screen">
+      <section className="py-20 bg-gradient-to-br from-green-50 via-emerald-50 to-green-50 min-h-screen">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-3xl shadow-xl p-8">
@@ -315,7 +315,7 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <section className="py-20 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 min-h-screen">
+      <section className="py-20 bg-gradient-to-br from-green-50 via-emerald-50 to-green-50 min-h-screen">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-3xl shadow-xl p-8 text-center">
@@ -324,7 +324,7 @@ export default function PostDetailPage() {
               <p className="text-gray-600 mb-6">The post you're looking for doesn't exist or has been removed.</p>
               <Link 
                 href="/post-management"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-full hover:shadow-lg transition-shadow"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-full hover:shadow-lg transition-shadow"
               >
                 <ArrowLeft className="w-5 h-5" />
                 Back to Posts
@@ -364,7 +364,7 @@ export default function PostDetailPage() {
                 />
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full transition-colors"
+                  className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full transition-colors"
                 >
                   <Edit3 className="w-4 h-4" />
                   Edit Post
@@ -410,7 +410,7 @@ export default function PostDetailPage() {
                 <div>
                   <label className="block font-medium mb-2 text-gray-700">Child</label>
                   <select
-                    className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     value={selectedChildId}
                     onChange={e => setSelectedChildId(e.target.value)}
                     required
@@ -428,7 +428,7 @@ export default function PostDetailPage() {
                 <div>
                   <label className="block font-medium mb-2 text-gray-700">Caption / Story</label>
                   <textarea
-                    className="w-full border px-4 py-3 rounded-xl min-h-[150px] focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full border px-4 py-3 rounded-xl min-h-[150px] focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     value={caption}
                     onChange={e => setCaption(e.target.value)}
                     required
@@ -440,7 +440,7 @@ export default function PostDetailPage() {
                 <div>
                   <label className="block font-medium mb-2 text-gray-700">Post Type</label>
                   <select
-                    className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     value={postType}
                     onChange={e => setPostType(e.target.value)}
                   >
@@ -493,7 +493,7 @@ export default function PostDetailPage() {
                       />
                       <label
                         htmlFor="image-upload"
-                        className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-orange-500 cursor-pointer transition-colors bg-gray-50 hover:bg-orange-50"
+                        className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-500 cursor-pointer transition-colors bg-gray-50 hover:bg-green-50"
                       >
                         <div className="text-center">
                           <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
@@ -560,7 +560,7 @@ export default function PostDetailPage() {
                       }}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                         useVideoFile 
-                          ? 'bg-orange-500 text-white' 
+                          ? 'bg-green-600 text-white' 
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
@@ -574,7 +574,7 @@ export default function PostDetailPage() {
                       }}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                         !useVideoFile 
-                          ? 'bg-orange-500 text-white' 
+                          ? 'bg-green-600 text-white' 
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
@@ -594,7 +594,7 @@ export default function PostDetailPage() {
                         />
                         <label
                           htmlFor="video-upload"
-                          className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-orange-500 cursor-pointer transition-colors bg-gray-50 hover:bg-orange-50"
+                          className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-500 cursor-pointer transition-colors bg-gray-50 hover:bg-green-50"
                         >
                           <div className="text-center">
                             <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
@@ -623,7 +623,7 @@ export default function PostDetailPage() {
                     <>
                       <input
                         type="url"
-                        className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         value={videoLink}
                         onChange={e => setVideoLink(e.target.value)}
                         placeholder="https://youtube.com/watch?v=... or other video URL"
@@ -673,7 +673,7 @@ export default function PostDetailPage() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white py-3 font-semibold rounded-xl transition-all disabled:opacity-50"
+                    className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3 font-semibold rounded-xl transition-all disabled:opacity-50"
                     disabled={loading || uploadingImage || uploadingVideo}
                   >
                     {uploadingImage ? 'Uploading Image...' : uploadingVideo ? 'Uploading Video...' : loading ? 'Saving...' : 'Save Changes'}
@@ -735,7 +735,7 @@ export default function PostDetailPage() {
                       <Calendar className="w-4 h-4" />
                       <span>{post.created_at ? new Date(post.created_at).toLocaleDateString() : 'N/A'}</span>
                     </div>
-                    <div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                    <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-3 py-1 rounded-full text-xs font-medium">
                       {postTypes.find(t => t.value === post.post_type)?.label || 'Update'}
                     </div>
                   </div>

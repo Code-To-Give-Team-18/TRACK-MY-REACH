@@ -215,7 +215,7 @@ export default function PostManagementPage() {
               type="button"
               onClick={() => { setUseVideoFile(true); setVideoLink(''); }}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                useVideoFile ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                useVideoFile ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Upload Video File
@@ -224,7 +224,7 @@ export default function PostManagementPage() {
               type="button"
               onClick={() => { setUseVideoFile(false); if (videoPreview) { URL.revokeObjectURL(videoPreview); setVideoPreview(null); setSelectedVideo(null); } }}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                !useVideoFile ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                !useVideoFile ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Use Video URL
@@ -236,7 +236,7 @@ export default function PostManagementPage() {
           <>
             <input
               type="url"
-              className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
               value={videoLink}
               onChange={e => setVideoLink(e.target.value)}
               placeholder="https://youtube.com/watch?v=... or other video URL"
@@ -254,7 +254,7 @@ export default function PostManagementPage() {
             />
             <label
               htmlFor={`${type}-upload`}
-              className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-orange-500 cursor-pointer transition-colors bg-gray-50 hover:bg-orange-50"
+              className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-500 cursor-pointer transition-colors bg-gray-50 hover:bg-green-50"
             >
               <div className="text-center">
                 <Upload className="w-12 h-12 text-gray-400 mx-auto mb-2" />
@@ -306,7 +306,7 @@ export default function PostManagementPage() {
   };
 
   return (
-    <section className="py-20 bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 min-h-screen">
+    <section className="py-20 bg-gradient-to-br from-green-50 via-emerald-50 to-green-50 min-h-screen">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -320,7 +320,7 @@ export default function PostManagementPage() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", duration: 0.6 }}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-full mb-6"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-full mb-6"
             >
               <Sparkles className="w-5 h-5" />
               <span className="font-semibold">Post Management</span>
@@ -341,7 +341,7 @@ export default function PostManagementPage() {
                   onClick={() => { setViewMode(mode); if (mode === 'list') resetForm(); }}
                   className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
                     viewMode === mode 
-                      ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-md transform scale-105' 
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md transform scale-105' 
                       : 'text-gray-600 hover:text-gray-900 bg-transparent'
                   }`}
                 >
@@ -388,7 +388,7 @@ export default function PostManagementPage() {
                         placeholder="Search posts..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
                     </div>
                     <div className="flex items-center gap-2">
@@ -396,7 +396,7 @@ export default function PostManagementPage() {
                       <select
                         value={selectedPostType}
                         onChange={(e) => setSelectedPostType(e.target.value)}
-                        className="border px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        className="border px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       >
                         <option value="all">All Types</option>
                         {POST_TYPES.map(type => (
@@ -427,7 +427,7 @@ export default function PostManagementPage() {
                     </p>
                     <button
                       onClick={() => setViewMode('create')}
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-full hover:shadow-lg transition-shadow"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-full hover:shadow-lg transition-shadow"
                     >
                       <Plus className="w-5 h-5" />
                       Create First Post
@@ -477,7 +477,7 @@ export default function PostManagementPage() {
                     ) : (
                       <div className="space-y-2">
                         <select
-                          className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                           value={selectedChildId}
                           onChange={e => setSelectedChildId(e.target.value)}
                           required
@@ -505,7 +505,7 @@ export default function PostManagementPage() {
                   <div>
                     <label className="block font-medium mb-2 text-gray-700">Caption / Story</label>
                     <textarea
-                      className="w-full border px-4 py-3 rounded-xl min-h-[150px] focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full border px-4 py-3 rounded-xl min-h-[150px] focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       value={caption}
                       onChange={e => setCaption(e.target.value)}
                       required
@@ -518,7 +518,7 @@ export default function PostManagementPage() {
                   <div>
                     <label className="block font-medium mb-2 text-gray-700">Post Type</label>
                     <select
-                      className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       value={postType}
                       onChange={e => setPostType(e.target.value)}
                     >
@@ -542,7 +542,7 @@ export default function PostManagementPage() {
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white py-4 text-lg font-semibold rounded-xl transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-4 text-lg font-semibold rounded-xl transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                       disabled={loading || loadingChildren || children.length === 0}
                     >
                       {loading ? 'Saving...' : 'Create Post'}
