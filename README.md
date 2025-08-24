@@ -53,7 +53,7 @@ Track My REACH is an all-in-one platform designed to strengthen the connection b
 ## 🔄 How It Works
 
 ### 1. Post Management
-<img src="assets/admin-panel.png" alt="Admin Panel" width="600">
+<img src="assets/admin-auto-post-create-0-post-management.png" alt="Post Management" width="600">
 
 Admins can easily broadcast posts across all social media platforms, boosting engagement and outreach while saving valuable time.
 
