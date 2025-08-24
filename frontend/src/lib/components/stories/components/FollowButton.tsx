@@ -1,7 +1,7 @@
 "use client"
 
 import { useAuthStore } from "@/stores/auth.store";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export enum FollowStatus {
   LOADING,
@@ -12,7 +12,7 @@ export enum FollowStatus {
 };
 
 interface FollowButtonProps {
-  status: boolean | undefined;
+  status: FollowStatus;
   childId: string
 }
 
@@ -21,15 +21,8 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
   childId
 }) => {
 
-  const [curStatus, setStatus] = useState<FollowStatus>()
-  const { user, isLoading } = useAuthStore();
-
-  useEffect(() => {
-    console.log(status, curStatus);
-    if (status === undefined) setStatus(FollowStatus.UNDEFINED);
-    if (status === true) setStatus(FollowStatus.FOLLOWING);
-    if (status === false) setStatus(FollowStatus.NOT_FOLLOWING);
-  }, [user, isLoading]);
+  const [curStatus, setStatus] = useState<FollowStatus>(status);
+  const { user } = useAuthStore();
 
   const handleClick = () => {
     if (!user) return;
@@ -43,15 +36,14 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
     }
 
     if (curStatus === FollowStatus.NOT_FOLLOWING) {
-      fetch(`http://localhost:8080/api/v1/followers/unfollow?userId=${user.id}&childId=${childId}`, {
+      fetch(`http://localhost:8080/api/v1/followers/follow?userId=${user.id}&childId=${childId}`, {
         method: "POST"
       });
       setStatus(FollowStatus.FOLLOWING);
     }
   }
-
   
-  if (!user || curStatus === FollowStatus.UNDEFINED) return;
+  if (!user) return;
   if (curStatus === FollowStatus.FOLLOWING) return <button onClick={()=> handleClick()}>Unfollow</button>
   if (curStatus === FollowStatus.NOT_FOLLOWING) return <button onClick={() => handleClick()}>Follow</button>
   if (curStatus === FollowStatus.LOADING) return <button>loading...</button>

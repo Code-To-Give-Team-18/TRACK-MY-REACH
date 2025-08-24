@@ -57,7 +57,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           >
             {post.child_name}
           </button>
-          <FollowButton status={post.follow_status} childId={post.child_id}/>
+          <FollowButton status={post.follow_status ? FollowStatus.FOLLOWING : FollowStatus.NOT_FOLLOWING} childId={post.child_id}/>
         </div>
         <p>{post.caption}</p>
         <div className="flex flex-row gap-3">

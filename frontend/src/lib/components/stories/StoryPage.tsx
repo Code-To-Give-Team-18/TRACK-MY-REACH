@@ -34,7 +34,7 @@ export const StoryPage = () => {
     if (!isLoading) {
       fetchPost(pageNumber, 10)
     }
-  }, [user]);
+  }, [user, isLoading]);
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
