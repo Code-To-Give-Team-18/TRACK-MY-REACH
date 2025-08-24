@@ -44,9 +44,15 @@ export const PostCard: React.FC<PostCardProps> = ({
     }}>
       <div className="flex justify-center">
         <video 
-          className="w-[500px] h-[600px] object-cover"
-          style={{ borderRadius: "12px" }}  
-          src={post.video_link ? getBackendUrl(post.video_link) : ''} width="500" height="500" autoPlay muted loop
+          className="object-cover"
+          style={{ 
+            borderRadius: "12px",
+            height: "80vh",
+            aspectRatio: "9/16",
+            maxWidth: "100%"
+          }}  
+          src={post.video_link ? getBackendUrl(post.video_link) : ''} autoPlay muted loop 
+          // controls
         />
       </div>
       <div className="flex flex-col gap-1 justify-center w-[500px]">
@@ -63,7 +69,7 @@ export const PostCard: React.FC<PostCardProps> = ({
         <p>{post.caption}</p>
         <div className="flex flex-row gap-3">
           <p>{post.likes} Likes</p>
-          <button>Like</button>
+          <button>Like</button>   
         </div>
       </div>
     </div>
