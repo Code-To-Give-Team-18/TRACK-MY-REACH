@@ -6,6 +6,7 @@ import { ChildInfo } from "./components/ChildInfo";
 import { ChildProvider, useChildContext } from "./contexts/ChildContext";
 import { useEffect, useState } from "react";
 import { Post, PostCard } from "../stories/components/PostCard";
+import { DonateButton } from "./components/DonateButton";
 
 const Posts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -148,6 +149,9 @@ const FanClub = () => {
           }
         </div>
       </div>
+      <div className="flex items-center justify-center w-full">
+        <DonateButton/>
+      </div>
     </div>
   );
 }
@@ -163,9 +167,9 @@ export const ChildPage = () => {
         <div className="flex flex-col h-[80dvh] w-full">
           <ChildInfo/>
         </div>
-        <FanClub/>
       </div>
       <Posts/>
+      <FanClub/>
     </ChildProvider>
   );
 }
