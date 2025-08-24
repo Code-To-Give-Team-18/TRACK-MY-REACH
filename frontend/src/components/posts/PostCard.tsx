@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Edit, Trash2, Heart, MessageSquare, Calendar, Eye } from 'lucide-react';
+import { Edit, Trash2, Heart, MessageSquare, Calendar, Eye } from 'lucide-react';
 import { type PostResponse } from '@/services/post.service';
 import { getBackendUrl } from '@/utils/url.utils';
 import { postService } from '@/services/post.service';
