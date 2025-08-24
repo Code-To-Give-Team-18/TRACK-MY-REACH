@@ -108,7 +108,7 @@ export function CompactImpactVisualizer() {
   const [donationAmount, setDonationAmount] = useState(0);
   const [userInteracted, setUserInteracted] = useState(false);
   const [debouncedAmount, setDebouncedAmount] = useState(0);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | undefined>();
   const debounceRef = useRef<NodeJS.Timeout>();
   const router = useRouter();
   
@@ -122,10 +122,39 @@ export function CompactImpactVisualizer() {
   // Auto-animate slider until user interaction
   useEffect(() => {
     if (!userInteracted) {
-      const currentValue = 500;
+      const animationSequence = [0, 50, 150, 300, 500, 1000, 500, 300, 150, 50];
+      let sequenceIndex = 0;
+      let targetValue = animationSequence[0];
+      let currentAnimValue = 0;
+      let lastTimestamp = 0;
       
-      const animate = () => {
-        setDonationAmount(currentValue);
+      const animate = (timestamp: number) => {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        const deltaTime = timestamp - lastTimestamp;
+        lastTimestamp = timestamp;
+        
+        // Smooth interpolation towards target
+        const speed = 2; // Adjust for animation speed
+        const diff = targetValue - currentAnimValue;
+        currentAnimValue += diff * Math.min(deltaTime * 0.001 * speed, 1);
+        
+        // Check if we're close enough to target to move to next
+        if (Math.abs(diff) < 1) {
+          // Hold at each tier for a moment
+          const holdDuration = 1500; // ms to pause at each tier
+          
+          if (!animationRef.current) {
+            animationRef.current = timestamp;
+          }
+          
+          if (timestamp - animationRef.current > holdDuration) {
+            sequenceIndex = (sequenceIndex + 1) % animationSequence.length;
+            targetValue = animationSequence[sequenceIndex];
+            animationRef.current = timestamp;
+          }
+        }
+        
+        setDonationAmount(Math.round(currentAnimValue));
         animationRef.current = requestAnimationFrame(animate);
       };
       
@@ -161,6 +190,7 @@ export function CompactImpactVisualizer() {
     setDonationAmount(value);
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
+      animationRef.current = undefined;
     }
   }, []);
   
