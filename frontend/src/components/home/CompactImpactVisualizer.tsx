@@ -122,7 +122,7 @@ export function CompactImpactVisualizer() {
   // Auto-animate slider until user interaction
   useEffect(() => {
     if (!userInteracted) {
-      const animationSequence = [0, 50, 150, 300, 500, 1000, 500, 300, 150, 50];
+      const animationSequence = [0, 50, 150, 300, 500, 800, 1000, 500, 300, 150, 50];
       let sequenceIndex = 0;
       let targetValue = animationSequence[0];
       let currentAnimValue = 0;
@@ -131,17 +131,20 @@ export function CompactImpactVisualizer() {
       const animate = (timestamp: number) => {
         if (!lastTimestamp) lastTimestamp = timestamp;
         const deltaTime = timestamp - lastTimestamp;
-        lastTimestamp = timestamp;
+        lastTimestamp = timestamp;  
         
         // Smooth interpolation towards target
-        const speed = 2; // Adjust for animation speed
+        const speed = 4.5; // Increased for faster animation
         const diff = targetValue - currentAnimValue;
         currentAnimValue += diff * Math.min(deltaTime * 0.001 * speed, 1);
+        
+        // Update donation amount immediately for better synchronization
+        setDonationAmount(Math.round(currentAnimValue));
         
         // Check if we're close enough to target to move to next
         if (Math.abs(diff) < 1) {
           // Hold at each tier for a moment
-          const holdDuration = 1500; // ms to pause at each tier
+          const holdDuration = 800; // Reduced pause duration
           
           if (!animationRef.current) {
             animationRef.current = timestamp;
@@ -154,7 +157,6 @@ export function CompactImpactVisualizer() {
           }
         }
         
-        setDonationAmount(Math.round(currentAnimValue));
         animationRef.current = requestAnimationFrame(animate);
       };
       
@@ -176,7 +178,7 @@ export function CompactImpactVisualizer() {
     
     debounceRef.current = setTimeout(() => {
       setDebouncedAmount(donationAmount);
-    }, 100); // Delay 3D updates by 100ms
+    }, 50); // Reduced delay for better synchronization
     
     return () => {
       if (debounceRef.current) {
