@@ -464,7 +464,7 @@ class UsersTable:
             },
             {
                 'id': 'user-009',
-                'name': 'Kevin Park',
+                'name': 'Zheng Yang',
                 'email': 'kevin.park@example.com',
                 'role': 'user',
                 'profile_image_url': 'https://picsum.photos/seed/kevin/200/200',

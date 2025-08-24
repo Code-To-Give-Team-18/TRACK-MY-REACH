@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { CheckCircle, Heart, Share2, Download, Home, ArrowRight } from 'lucide-react';
+import { CheckCircle, Heart, Share2, Download, Home, ArrowRight, Send } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import Link from 'next/link';
 
@@ -59,6 +59,9 @@ export default function DonationSuccessPage() {
         break;
       case 'linkedin':
         window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`, '_blank');
+        break;
+      case 'telegram':
+        window.open(`https://t.me/share/url?url=${shareUrl}&text=${shareText}`, '_blank');
         break;
       case 'copy':
         navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
@@ -223,34 +226,14 @@ export default function DonationSuccessPage() {
                 <p className="text-gray-600 mb-4">
                   Share your donation and encourage friends to support education
                 </p>
-                <div className="flex justify-center gap-3">
+                <div className="flex justify-center">
                   <button
-                    onClick={() => handleShare('facebook')}
-                    className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    aria-label="Share on Facebook"
+                    onClick={() => handleShare('telegram')}
+                    className="px-6 py-3 bg-[#0088cc] text-white rounded-lg hover:bg-[#0077b5] transition-colors flex items-center gap-2 font-medium"
+                    aria-label="Share on Telegram"
                   >
-                    <Share2 className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => handleShare('twitter')}
-                    className="p-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors"
-                    aria-label="Share on Twitter"
-                  >
-                    <Share2 className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => handleShare('linkedin')}
-                    className="p-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
-                    aria-label="Share on LinkedIn"
-                  >
-                    <Share2 className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={() => handleShare('copy')}
-                    className="p-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                    aria-label="Copy link"
-                  >
-                    <Share2 className="h-5 w-5" />
+                    <Send className="h-5 w-5" />
+                    Share on Telegram
                   </button>
                 </div>
               </div>
