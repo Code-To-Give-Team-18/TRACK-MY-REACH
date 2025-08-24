@@ -26,8 +26,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const navigationItems = [
   {
-    label: 'Support Children',
-    href: '/children',
+    label: 'Stories',
+    href: '/stories',
     icon: Heart
   },
   {
