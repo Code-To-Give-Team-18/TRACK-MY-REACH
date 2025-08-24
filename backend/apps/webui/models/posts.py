@@ -257,4 +257,117 @@ class PostsTable:
             'updated_at': comment.updated_at.isoformat() if comment.updated_at else None
         }
 
+    def seed_default_posts(self):
+        """Seed default posts data for demo purposes"""
+        import json
+        from datetime import datetime, timedelta
+        
+        default_posts = [
+            {
+                'id': 'post-001',
+                'child_id': 'child-001',
+                'title': 'Shawn\'s First Day Back at School',
+                'caption': 'Exciting news from Central Primary School',
+                'comments': 'Shawn returned to school today after the winter break with renewed enthusiasm!',
+                'post_type': 'update',
+                'media_urls': json.dumps(['https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800']),
+                'video_link': 'https://reach.org.hk/_assets/video/b1d7bdf9c9be351fc18a76ee170f9117.mp4',
+                'is_featured': True,
+                'likes': 23,
+                'comments_count': 5,
+                'created_at': datetime.now() - timedelta(days=2)
+            },
+            {
+                'id': 'post-002',
+                'child_id': 'child-001',
+                'title': 'Shawn Wins Reading Competition',
+                'caption': 'Proud moment for our star reader',
+                'comments': 'Shawn won first place in the district reading competition! Her dedication to reading has truly paid off.',
+                'post_type': 'achievement',
+                'media_urls': json.dumps(['https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800']),
+                'video_link': 'https://reach.org.hk/_assets/video/436f7419b8ea8afe3ddc521715b019f6.mp4',
+                'is_featured': True,
+                'likes': 45,
+                'comments_count': 12,
+                'created_at': datetime.now() - timedelta(days=7)
+            },
+            {
+                'id': 'post-003',
+                'child_id': 'child-001',
+                'title': 'Shawn\'s Art Exhibition',
+                'caption': 'Young artist showcases his talent',
+                'comments': 'Shawn\'s artwork was featured in the school\'s annual art exhibition. His painting "My Community" received special recognition.',
+                'post_type': 'achievement',
+                'media_urls': json.dumps(['https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=800']),
+                'video_link': 'https://reach.org.hk/_assets/video/1bd62c8e55431d6f676f6b950e2c2825.mp4',
+                'is_featured': False,
+                'likes': 38,
+                'comments_count': 8,
+                'created_at': datetime.now() - timedelta(days=5)
+            },
+            {
+                'id': 'post-004',
+                'child_id': 'child-003',
+                'title': 'Sophie\'s Math Competition Success',
+                'caption': 'District champion in mathematics',
+                'comments': 'Sophie placed first in the Kwun Tong District Mathematics Competition! Her problem-solving skills impressed all the judges.',
+                'post_type': 'achievement',
+                'media_urls': json.dumps(['https://images.unsplash.com/photo-1596495577886-d920f1fb7238?w=800']),
+                'video_link': 'https://reach.org.hk/_assets/video/2ea4ad79fd042cf6056fdad4c7087d99.mp4',
+                'youtube_url': 'https://reach.org.hk/_assets/video/2ea4ad79fd042cf6056fdad4c7087d99.mp4',
+                'is_featured': True,
+                'likes': 67,
+                'comments_count': 15,
+                'created_at': datetime.now() - timedelta(days=10)
+            },
+            {
+                'id': 'post-005',
+                'child_id': 'child-004',
+                'title': 'Tommy Joins School Football Team',
+                'caption': 'New team member shows great promise',
+                'comments': 'Tommy has been selected for the school\'s junior football team! His coach says he shows natural leadership abilities.',
+                'post_type': 'update',
+                'media_urls': json.dumps(['https://images.unsplash.com/photo-1571698140436-59b13ec27e6a?w=800']),
+                'video_link': 'https://reach.org.hk/_assets/video/f960e111511adfe6ebbe872fa8f41664.mp4',
+                'likes': 29,
+                'comments_count': 6,
+                'created_at': datetime.now() - timedelta(days=3)
+            },
+            {
+                'id': 'post-006',
+                'child_id': 'child-005',
+                'title': 'Emily\'s School Concert Performance',
+                'caption': 'A voice that touches hearts',
+                'comments': 'Emily performed beautifully at the school\'s spring concert. Her rendition of "Tomorrow" brought tears to many eyes.',
+                'post_type': 'achievement',
+                'video_link': 'https://reach.org.hk/_assets/video/9ec92e6504052ae999c00a28a45482d4.mp4',
+                'media_urls': json.dumps(['https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800']),
+                'is_featured': True,
+                'likes': 89,
+                'comments_count': 22,
+                'created_at': datetime.now() - timedelta(days=14)
+            },
+            {
+                'id': 'post-007',
+                'child_id': 'child-006',
+                'title': 'Michael\'s Science Fair Project',
+                'caption': 'Young scientist explores plant growth',
+                'comments': 'Michael\'s project on "How Music Affects Plant Growth" won second place at the school science fair!',
+                'post_type': 'achievement',
+                'media_urls': json.dumps(['https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=800']),
+                'video_link': 'https://reach.org.hk/_assets/video/c9b3368ff63c3b97009330fd8bb36aa7.mp4',
+                'likes': 43,
+                'comments_count': 9,
+                'created_at': datetime.now() - timedelta(days=8)
+            },
+        ]
+        
+        for post_data in default_posts:
+            existing = Post.get_or_none(Post.id == post_data['id'])
+            if not existing:
+                # Extract child_id separately as it's a foreign key
+                child_id = post_data.pop('child_id')
+                Post.create(child=child_id, **post_data)
+
 Posts = PostsTable(DB)
+Posts.seed_default_posts()
