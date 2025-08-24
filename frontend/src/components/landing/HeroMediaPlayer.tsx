@@ -36,7 +36,7 @@ export default function HeroMediaPlayer({ posts }: HeroMediaPlayerProps) {
     return () => {
       if (imageTimer) clearTimeout(imageTimer);
     };
-  }, [currentIndex, posts.length, hasVideo, imageTimer]);
+  }, [currentIndex, posts.length, hasVideo]);
 
   // Handle video end
   const handleVideoEnd = () => {
