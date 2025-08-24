@@ -17,6 +17,10 @@ const authPaths = ['/login', '/signup'];
 const adminPaths = ['/dashboard', '/admin'];
 
 export function middleware(request: NextRequest) {
+  // ============ TEMPORARILY DISABLED AUTH PROTECTION ============
+  // TO RE-ENABLE: Uncomment the auth check code block below
+  // ===============================================================
+  
   const { pathname } = request.nextUrl;
   // Note: middleware can't access localStorage, only cookies
   const token = request.cookies.get('token')?.value;
@@ -27,12 +31,14 @@ export function middleware(request: NextRequest) {
   const isAdminPath = adminPaths.some(path => pathname.startsWith(path));
   const isHomePage = pathname === '/';
   
+  // ============ AUTH PROTECTION DISABLED - UNCOMMENT TO RE-ENABLE ============
   // Redirect to login if accessing protected route without token
-  if (!token && !isPublicPath && !isHomePage) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('from', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
+  // if (!token && !isPublicPath && !isHomePage) {
+  //   const loginUrl = new URL('/login', request.url);
+  //   loginUrl.searchParams.set('from', pathname);
+  //   return NextResponse.redirect(loginUrl);
+  // }
+  // ===========================================================================
 
   // Note: We can't check user role in middleware as we only have the token
   // Role-based access control will be handled on the client side in each protected page
