@@ -14,10 +14,15 @@ export default function DashboardPage() {
  }, []);
 
  useEffect(() => {
- if (!isLoading && !isAuthenticated) {
+ if (!isLoading) {
+ if (!isAuthenticated) {
  router.push('/login');
+ } else if (user && user.role !== 'admin') {
+ // Redirect non-admin users to profile page
+ router.push('/profile');
  }
- }, [isLoading, isAuthenticated, router]);
+ }
+ }, [isLoading, isAuthenticated, user, router]);
 
  if (isLoading) {
  return (

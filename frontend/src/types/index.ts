@@ -5,6 +5,7 @@ export interface User {
   name: string;
   role: 'admin' | 'user' | 'pending';
   profile_image_url: string;
+  referral_code?: string;
   last_active_at: number;
   created_at: number;
   updated_at: number;
@@ -29,7 +30,13 @@ export interface SignUpForm {
 
 export interface AuthResponse {
   token: string;
-  user: User;
+  token_type: string;
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'user' | 'pending';
+  profile_image_url: string;
+  referral_code?: string;
 }
 
 // File types

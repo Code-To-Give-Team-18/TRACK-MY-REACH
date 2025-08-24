@@ -43,7 +43,13 @@ export default function SignupPage() {
  email: data.email,
  password: data.password,
  });
+ // Redirect based on user role (new users default to 'user' role now)
+ const user = useAuthStore.getState().user;
+ if (user?.role === 'admin') {
  router.push('/dashboard');
+ } else {
+ router.push('/profile');
+ }
  } catch (error) {
  // Error is handled in the store
  }

@@ -13,6 +13,9 @@ const publicPaths = [
 
 const authPaths = ['/login', '/signup'];
 
+// Admin-only paths
+const adminPaths = ['/dashboard', '/admin'];
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // Note: middleware can't access localStorage, only cookies
@@ -21,6 +24,7 @@ export function middleware(request: NextRequest) {
   // Check if the path is public
   const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
   const isAuthPath = authPaths.some(path => pathname.startsWith(path));
+  const isAdminPath = adminPaths.some(path => pathname.startsWith(path));
   const isHomePage = pathname === '/';
   
   // Redirect to login if accessing protected route without token
@@ -30,10 +34,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Note: We can't check user role in middleware as we only have the token
+  // Role-based access control will be handled on the client side in each protected page
+  // Admin pages will check if user.role === 'admin' and redirect if not
+
   // Don't redirect from auth pages automatically - let the client handle it
   // This prevents redirect loops when token is invalid
   // if (token && isAuthPath) {
-  //   return NextResponse.redirect(new URL('/dashboard', request.url));
+  //   return NextResponse.redirect(new URL('/profile', request.url));
   // }
 
   const response = NextResponse.next();

@@ -176,15 +176,6 @@ export default function Header() {
 
                       <div className="py-2">
                         <Link
-                          href="/dashboard"
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
-                        >
-                          <LayoutDashboard className="w-4 h-4 text-gray-600" />
-                          <span className="text-gray-700">Dashboard</span>
-                        </Link>
-
-                        <Link
                           href="/profile"
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
@@ -192,6 +183,17 @@ export default function Header() {
                           <User className="w-4 h-4 text-gray-600" />
                           <span className="text-gray-700">My Profile</span>
                         </Link>
+
+                        {user.role === 'admin' && (
+                          <Link
+                            href="/dashboard"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2 hover:bg-orange-50 transition-colors"
+                          >
+                            <LayoutDashboard className="w-4 h-4 text-gray-600" />
+                            <span className="text-gray-700">Admin Dashboard</span>
+                          </Link>
+                        )}
 
 
                         {/*Show "Post Management" only if the user is an admin*/}
@@ -307,19 +309,21 @@ export default function Header() {
                       </div>
                     </div>
 
-                    <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full rounded-full justify-start">
-                        <LayoutDashboard className="w-4 h-4 mr-2" />
-                        Dashboard
-                      </Button>
-                    </Link>
-
                     <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)}>
                       <Button variant="outline" className="w-full rounded-full justify-start">
                         <User className="w-4 h-4 mr-2" />
                         My Profile
                       </Button>
                     </Link>
+
+                    {user.role === 'admin' && (
+                      <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full rounded-full justify-start">
+                          <LayoutDashboard className="w-4 h-4 mr-2" />
+                          Admin Dashboard
+                        </Button>
+                      </Link>
+                    )}
 
 
                     {user.role === 'admin' && (

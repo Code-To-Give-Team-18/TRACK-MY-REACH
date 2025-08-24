@@ -33,8 +33,17 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await authService.signIn(data);
+          // Backend returns user fields directly in response
+          const user = {
+            id: response.id,
+            email: response.email,
+            name: response.name,
+            role: response.role,
+            profile_image_url: response.profile_image_url,
+            referral_code: response.referral_code,
+          };
           set({
-            user: response.user,
+            user,
             token: response.token,
             isAuthenticated: true,
             isLoading: false,
@@ -54,8 +63,17 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await authService.signUp(data);
+          // Backend returns user fields directly in response
+          const user = {
+            id: response.id,
+            email: response.email,
+            name: response.name,
+            role: response.role,
+            profile_image_url: response.profile_image_url,
+            referral_code: response.referral_code,
+          };
           set({
-            user: response.user,
+            user,
             token: response.token,
             isAuthenticated: true,
             isLoading: false,

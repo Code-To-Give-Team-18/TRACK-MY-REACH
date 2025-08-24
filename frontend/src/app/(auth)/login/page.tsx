@@ -26,8 +26,18 @@ export default function LoginPage() {
  // Redirect if already authenticated
  useEffect(() => {
  if (isAuthenticated) {
- const from = searchParams.get('from') || '/dashboard';
+ const from = searchParams.get('from');
+ if (from) {
  router.push(from);
+ } else {
+ // Redirect based on user role
+ const user = useAuthStore.getState().user;
+ if (user?.role === 'admin') {
+ router.push('/dashboard');
+ } else {
+ router.push('/profile');
+ }
+ }
  }
  }, [isAuthenticated, router, searchParams]);
 
@@ -42,8 +52,18 @@ export default function LoginPage() {
  const onSubmit = async (data: LoginFormData) => {
  try {
  await signIn(data);
- const from = searchParams.get('from') || '/dashboard';
+ const from = searchParams.get('from');
+ if (from) {
  router.push(from);
+ } else {
+ // Redirect based on user role
+ const user = useAuthStore.getState().user;
+ if (user?.role === 'admin') {
+ router.push('/dashboard');
+ } else {
+ router.push('/profile');
+ }
+ }
  } catch (error) {
  // Error is handled in the store
  }

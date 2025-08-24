@@ -57,6 +57,7 @@ class UserResponse(BaseModel):
     name: str
     role: str
     profile_image_url: str
+    referral_code: Optional[str] = None
 
 
 class SigninResponse(Token, UserResponse):

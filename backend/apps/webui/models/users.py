@@ -53,6 +53,8 @@ class UserModel(BaseModel):
     email: str
     role: str = "user"
     profile_image_url: str
+    
+    referral_code: Optional[str] = None
 
     last_active_at: int  # timestamp in epoch
     updated_at: int  # timestamp in epoch
