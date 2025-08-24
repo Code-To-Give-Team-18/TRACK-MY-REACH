@@ -13,7 +13,6 @@ export default function Home() {
       <StoriesHighlight />
       <CompactImpactVisualizer />
       <ImpactCounters />
-      <DonationCTA />
     </main>
   );
 }

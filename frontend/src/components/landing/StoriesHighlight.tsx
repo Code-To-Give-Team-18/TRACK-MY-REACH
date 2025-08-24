@@ -7,6 +7,7 @@ import { getBackendUrl } from '@/utils/url.utils';
 
 interface Story {
   id: string;
+  child_id: string;
   child_name: string;
   title: string;
   caption: string;
@@ -30,6 +31,7 @@ export default function StoriesHighlight() {
         setStories([
           {
             id: '1',
+            child_id: '11',
             child_name: 'Jenny',
             title: 'First Words at Project REACH',
             caption: 'Thanks to your support, Jenny has spoken her first word!',
@@ -38,6 +40,7 @@ export default function StoriesHighlight() {
           },
           {
             id: '2',
+            child_id: '12',
             child_name: 'Benny',
             title: 'Learning to Read',
             caption: 'Thanks to your donations, Benny is discovering the joy of books!',
@@ -46,6 +49,7 @@ export default function StoriesHighlight() {
           },
           {
             id: '3',
+            child_id: '13',
             child_name: 'Kelly',
             title: 'Growing Confident',
             caption: 'Thanks to you, Kelly is thriving in her education journey!',
@@ -146,12 +150,14 @@ export default function StoriesHighlight() {
                     </p>
                     
                     <div className={`inline-flex items-center gap-3 ${index % 2 === 1 ? 'md:ml-auto' : ''}`}>
-                      <button className="group/btn bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 inline-flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"/>
-                        </svg>
-                        <span>Watch Story</span>
-                      </button>
+                      <Link href={`/child?id=${story.child_id}`}>
+                        <button className="group/btn bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 inline-flex items-center gap-2">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"/>
+                          </svg>
+                          <span>Watch Story</span>
+                        </button>
+                      </Link>
                     </div>
                   </div>
                 </div>
