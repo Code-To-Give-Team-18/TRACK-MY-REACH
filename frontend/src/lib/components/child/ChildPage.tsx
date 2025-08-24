@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { ChildInfo } from "./components/ChildInfo";
 import { ChildProvider, useChildContext } from "./contexts/ChildContext";
@@ -50,18 +49,23 @@ const Posts = () => {
   };
 
   return (
-    <div className="w-full h-screen snap-start relative">
-      <h1 className="text-4xl text-black font-extrabold p-10 text-center">View my updates here</h1>
-      <div className="relative h-[calc(100vh-120px)]">
+    <div className="w-full h-screen relative">
+      {/* Fixed heading overlay */}
+      <div className="absolute top-0 left-0 right-0 z-10 bg-white/80 backdrop-blur-sm">
+        <h1 className="text-4xl text-black font-extrabold py-6 text-center">View my updates here</h1>
+      </div>
+      
+      {/* Scrollable content area */}
+      <div className="relative h-full">
         <div
-          className="flex flex-col overflow-y-scroll snap-y snap-mandatory h-full scrollbar-hide"
+          className="flex flex-col overflow-y-scroll snap-y snap-mandatory h-full scrollbar-hide pt-24"
           onScroll={handleScroll}
           style={{ scrollBehavior: 'smooth' }}
         >
           {posts.map((post) => {
             return (
-              <div className="snap-start min-h-full" key={post.id}>
-                <PostCard post={post} />
+              <div className="snap-start min-h-full flex items-center justify-center" key={post.id}>
+                <PostCard post={post} constrainScrollArea={true} />
               </div>
             )
           })}
@@ -69,16 +73,16 @@ const Posts = () => {
         
         {/* Vertical Dot Indicators */}
         {posts.length > 0 && (
-          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-2">
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex flex-col gap-2 z-10">
             {posts.map((_, index) => (
               <button
                 key={index}
                 onClick={() => {
-                  const scrollContainer = document.querySelector('.snap-y.snap-mandatory');
+                  const scrollContainer = document.querySelector('.snap-y.snap-mandatory') as HTMLElement;
                   if (scrollContainer) {
-                    const postHeight = scrollContainer.clientHeight;
+                    const viewportHeight = scrollContainer.clientHeight;
                     scrollContainer.scrollTo({
-                      top: index * postHeight,
+                      top: index * viewportHeight,
                       behavior: 'smooth'
                     });
                   }

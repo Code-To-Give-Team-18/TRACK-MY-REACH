@@ -26,10 +26,12 @@ export interface Post {
 
 interface PostCardProps {
   post: Post;
+  constrainScrollArea?: boolean; // When true, scroll area is limited to content width
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
-  post
+  post,
+  constrainScrollArea = false
 }) => {
 
   const router = useRouter();
@@ -38,10 +40,9 @@ export const PostCard: React.FC<PostCardProps> = ({
     router.push(`/child?id=${childId}`);
   }
 
-  return (
-    <div className="flex flex-col gap-2 justify-center items-center snap-center w-full min-h-dvh" style={{
-      height: "calc(100dvh - 80px)"
-    }}>
+  // When constrainScrollArea is true, we wrap content in a container that limits the scroll trigger area
+  const content = (
+    <>
       <div className="flex justify-center">
         <video 
           className="object-cover"
@@ -72,6 +73,22 @@ export const PostCard: React.FC<PostCardProps> = ({
           <button>Like</button>   
         </div>
       </div>
+    </>
+  );
+
+  if (constrainScrollArea) {
+    return (
+      <div className="flex justify-center items-center snap-center w-full min-h-dvh">
+        <div className="flex flex-col gap-2 justify-center items-center max-w-[600px]">
+          {content}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2 justify-center items-center snap-center w-full min-h-dvh">
+      {content}
     </div>
   );
 }
