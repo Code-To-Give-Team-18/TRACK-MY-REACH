@@ -357,13 +357,18 @@ def get_referral_summary_stats():
 def get_user_referral_stats(user_id: str, user=Depends(get_current_user)):
     """Get detailed referral statistics for a user"""
     try:
+        print(f"[REFERRAL STATS] Fetching stats for user_id: {user_id}")
+        
         # Get user data
         user_data = Users.get_user_by_id(user_id)
+        print(f"[REFERRAL STATS] User data retrieved: {user_data}")
         if not user_data:
             raise HTTPException(status_code=404, detail="User not found")
         
         # Get referral stats
+        print(f"[REFERRAL STATS] Calling Referrals.get_user_referral_stats...")
         stats = Referrals.get_user_referral_stats(user_id)
+        print(f"[REFERRAL STATS] Stats retrieved: {stats}")
         
         # Calculate tier
         total_amount = stats['as_referrer']['total_referral_donations']
@@ -391,11 +396,22 @@ def get_user_referral_stats(user_id: str, user=Depends(get_current_user)):
                 rank = idx
                 break
         
+        # Handle created_at which might be a Unix timestamp or datetime
+        created_at = user_data.get('created_at') if isinstance(user_data, dict) else user_data.created_at
+        if isinstance(created_at, (int, float)):
+            # Convert Unix timestamp to ISO string
+            from datetime import datetime
+            joined_date_str = datetime.fromtimestamp(created_at).isoformat()
+        elif created_at:
+            joined_date_str = str(created_at)
+        else:
+            joined_date_str = None
+            
         return ReferralStats(
             user_id=user_id,
-            user_name=user_data.name,
-            profile_image_url=user_data.profile_image_url,
-            referral_code=user_data.referral_code or "",
+            user_name=user_data.get('name') if isinstance(user_data, dict) else user_data.name,
+            profile_image_url=user_data.get('profile_image_url') if isinstance(user_data, dict) else user_data.profile_image_url,
+            referral_code=(user_data.get('referral_code') if isinstance(user_data, dict) else user_data.referral_code) or "",
             total_referrals=stats['as_referrer']['registered_count'],
             active_referrals=stats['as_referrer']['donated_count'],
             total_donations_amount=total_amount,
@@ -403,11 +419,14 @@ def get_user_referral_stats(user_id: str, user=Depends(get_current_user)):
             rank=rank,
             badges=badges,
             rewards=stats['rewards']['rewards'],
-            joined_date=user_data.created_at
+            joined_date=joined_date_str
         )
     except HTTPException:
         raise
     except Exception as e:
+        print(f"[REFERRAL STATS ERROR] Exception occurred: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch user stats: {str(e)}"

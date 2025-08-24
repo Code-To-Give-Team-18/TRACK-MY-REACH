@@ -24,13 +24,11 @@ export function useClassroomUpdates(classroomId: string) {
     });
 
     newSocket.on('connect', () => {
-      console.log('Connected to classroom updates');
       setIsConnected(true);
       newSocket.emit('join-classroom', { classroomId });
     });
 
     newSocket.on('disconnect', () => {
-      console.log('Disconnected from classroom updates');
       setIsConnected(false);
     });
 
@@ -48,7 +46,6 @@ export function useClassroomUpdates(classroomId: string) {
       itemsFunded: string[];
     }) => {
       if (data.classroomId === classroomId) {
-        console.log('New donation received:', data);
       }
     });
 

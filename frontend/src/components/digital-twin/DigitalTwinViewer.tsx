@@ -16,7 +16,6 @@ export function DigitalTwinViewer({ classroomId = 'cls-1' }: { classroomId?: str
   useEffect(() => {
     if (updates.length > 0) {
       const latestUpdate = updates[updates.length - 1];
-      console.log('Received classroom update:', latestUpdate);
     }
   }, [updates]);
 

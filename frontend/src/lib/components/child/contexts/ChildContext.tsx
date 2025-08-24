@@ -18,7 +18,6 @@ interface ChildProviderProps {
 
 export const ChildProvider = ({ childId, children } : ChildProviderProps) => {
   const { child, setChild, loading, refetch } = useChild(childId);
-  console.log("child", child);
 
   const contextValue: ChildContextType = {
     child,
