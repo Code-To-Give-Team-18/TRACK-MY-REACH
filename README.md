@@ -103,14 +103,14 @@ Scroll seamlessly through videos that keep donors updated on each child's journe
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/Code-To-Give-Team-18/commit-to-kids.git
-cd commit-to-kids
+git clone https://github.com/Code-To-Give-Team-18/TRACK-MY-REACH.git
+cd TRACK-MY-REACH
 ```
 
 2. Create and activate conda environment:
 ```bash
-conda create -n commit-to-kids python=3.9
-conda activate commit-to-kids
+conda create -n track-my-reach python=3.9
+conda activate track-my-reach
 ```
 
 3. Start the backend server:
