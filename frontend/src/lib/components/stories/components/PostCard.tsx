@@ -47,7 +47,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           className="object-cover"
           style={{ 
             borderRadius: "12px",
-            height: "80vh",
+            height: "70vh",
             aspectRatio: "9/16",
             maxWidth: "100%"
           }}  
