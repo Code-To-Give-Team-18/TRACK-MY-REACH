@@ -130,65 +130,60 @@ function CheckoutContent() {
           </div>
         )}
         
-        <div className={mode === 'quick' ? 'max-w-2xl mx-auto' : 'grid grid-cols-1 lg:grid-cols-2 gap-8'}>
-          {/* Left: Payment Form (or Center when quick mode) */}
-          <div className="space-y-6">
-            {/* Payment Form */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8 hover:shadow-2xl transition-shadow">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="h-1 w-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"></div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  {mode === 'quick' ? 'Quick Donation' : 'Secure Payment'}
-                </h2>
-              </div>
-              <CheckoutFlow
-                amount={donationAmount}
-                onAmountChange={setDonationAmount}
-                childId={selectedStudent}
-                regionId={selectedRegion}
-                mode={mode || 'guest'}
-              />
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Payment Form */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8 hover:shadow-2xl transition-shadow">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="h-1 w-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"></div>
+              <h2 className="text-xl font-bold text-gray-900">
+                {mode === 'quick' ? 'Quick Donation' : 'Secure Payment'}
+              </h2>
             </div>
+            <CheckoutFlow
+              amount={donationAmount}
+              onAmountChange={setDonationAmount}
+              childId={selectedStudent}
+              regionId={selectedRegion}
+              mode={mode || 'guest'}
+            />
+          </div>
 
-            {/* Impact Section */}
-            <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl shadow-xl p-8 text-white relative overflow-hidden">
-              <div className="absolute inset-0 bg-black/10"></div>
-              <div className="relative">
-                <div className="flex items-center gap-2 mb-6">
-                  <TrendingUp className="h-5 w-5" />
-                  <h2 className="text-xl font-bold">Your Impact</h2>
+          {/* Impact Section */}
+          <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl shadow-xl p-8 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-black/10"></div>
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-6">
+                <TrendingUp className="h-5 w-5" />
+                <h2 className="text-xl font-bold">Your Impact</h2>
+              </div>
+              <div className="grid grid-cols-3 gap-6">
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center border border-white/30">
+                  <div className="text-3xl font-bold">HK${donationAmount}</div>
+                  <p className="text-xs mt-2 text-white/90">Your Donation</p>
                 </div>
-                <div className="grid grid-cols-3 gap-6">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center border border-white/30">
-                    <div className="text-3xl font-bold">HK${donationAmount}</div>
-                    <p className="text-xs mt-2 text-white/90">Your Donation</p>
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center border border-white/30">
+                  <div className="text-3xl font-bold">
+                    {Math.floor(donationAmount / 30)}
                   </div>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center border border-white/30">
-                    <div className="text-3xl font-bold">
-                      {Math.floor(donationAmount / 30)}
-                    </div>
-                    <p className="text-xs mt-2 text-white/90">Meals Provided</p>
-                  </div>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center border border-white/30">
-                    <div className="text-3xl font-bold">
-                      {Math.floor(donationAmount / 200)}
-                    </div>
-                    <p className="text-xs mt-2 text-white/90">School Kits</p>
-                  </div>
+                  <p className="text-xs mt-2 text-white/90">Meals Provided</p>
                 </div>
-                <div className="mt-6 p-4 bg-white/10 rounded-xl border border-white/20">
-                  <p className="text-sm text-center">
-                    Every dollar counts! Your donation directly supports education and nutrition for children in need.
-                  </p>
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center border border-white/30">
+                  <div className="text-3xl font-bold">
+                    {Math.floor(donationAmount / 200)}
+                  </div>
+                  <p className="text-xs mt-2 text-white/90">School Kits</p>
                 </div>
+              </div>
+              <div className="mt-6 p-4 bg-white/10 rounded-xl border border-white/20">
+                <p className="text-sm text-center">
+                  Every dollar counts! Your donation directly supports education and nutrition for children in need.
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Right: Map and Student Selection - Hide for quick donations */}
+          {/* Map and Region Selection - Hide for quick donations */}
           {mode !== 'quick' && (
-          <div className="space-y-6">
-            {/* Top Right: 3D Map and Region Selection */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-6 hover:shadow-2xl transition-shadow">
               <div className="flex items-center gap-2 mb-4">
                 <div className="h-1 w-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full"></div>
@@ -215,9 +210,11 @@ function CheckoutContent() {
                 onRegionSelect={setSelectedRegion}
               />
             </div>
+          )}
 
-            {/* Bottom Right: Student Selection */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-6 max-h-[420px] overflow-y-auto hover:shadow-2xl transition-shadow">
+          {/* Student Selection - Hide for quick donations */}
+          {mode !== 'quick' && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-6 hover:shadow-2xl transition-shadow">
               <div className="flex items-center gap-2 mb-4">
                 <div className="h-1 w-12 bg-gradient-to-r from-rose-500 to-pink-600 rounded-full"></div>
                 <h2 className="text-xl font-bold text-gray-900">
@@ -231,7 +228,6 @@ function CheckoutContent() {
                 initialChildId={childId || undefined}
               />
             </div>
-          </div>
           )}
         </div>
       </div>
