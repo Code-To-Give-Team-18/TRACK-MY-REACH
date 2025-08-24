@@ -162,19 +162,3 @@ export default function PostCard({ post, onEdit, onDelete }: PostCardProps) {
     </motion.div>
   );
 }
-
-function WatchVideoButton({ videoUrl }: { videoUrl: string }) {
-  const handleClick = () => {
-    window.open(videoUrl, '_blank');
-  };
-
-  return (
-    <button
-      onClick={handleClick}
-      className="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
-    >
-      <Play className="w-4 h-4" />
-      <span className="text-sm font-medium">Watch Video</span>
-    </button>
-  );
-}
