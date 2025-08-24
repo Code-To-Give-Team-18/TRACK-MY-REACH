@@ -7,8 +7,8 @@ import Footer from './Footer';
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
-  // Exclude header and footer for digital-twin pages
-  const excludedPaths = ['/digital-twin', '/digital-twin-v2'];
+  // Exclude header and footer for specific pages
+  const excludedPaths = ['/digital-twin-v2'];
   const shouldShowHeaderFooter = !excludedPaths.includes(pathname);
 
   return (
