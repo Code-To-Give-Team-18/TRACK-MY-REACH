@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { ChildInfo } from "./components/ChildInfo";
 import { ChildProvider, useChildContext } from "./contexts/ChildContext";
@@ -7,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Post, PostCard } from "../stories/components/PostCard";
 import { DonateButton } from "./components/DonateButton";
 import "./styles/scrollbar.css";
+import { getBackendUrl } from "@/utils/url.utils";
 
 const Posts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -136,20 +138,86 @@ const FanClub = () => {
   if (!child) return;
 
   return (
-    <div className="bg-white w-full h-full flex items-center justify-center py-8">
+    <div className="w-full h-full py-8">
       <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
+        <div className="max-w-4xl mx-auto space-y-6">
+          
+          {/* Child Details Card */}
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6">
+              <div className="flex items-center gap-6">
+                <div className="flex-shrink-0">
+                  <Image
+                    src={child.picture_link ? getBackendUrl(child.picture_link) : "/placeholder.png"}
+                    alt={child.name}
+                    width={120}
+                    height={120}
+                    className="rounded-full border-4 border-white shadow-lg"
+                  />
+                </div>
+                <div className="flex-1 text-white">
+                  <h1 className="text-3xl font-bold mb-2">{child.name}</h1>
+                  <div className="flex flex-wrap gap-4 text-sm">
+                    <div className="flex items-center gap-1">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Age: {child.age} years</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      <span>Grade: {child.grade || 'K3'}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span>{child.region || 'Hong Kong'}</span>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-white/90 text-sm">
+                    {child.description || 'A bright student with dreams of a better future through education.'}
+                  </p>
+                </div>
+                <div className="flex-shrink-0">
+                  <DonateButton />
+                </div>
+              </div>
+            </div>
+            
+            {/* Impact Stats */}
+            <div className="grid grid-cols-3 divide-x divide-gray-200 bg-white">
+              <div className="p-4 text-center">
+                <p className="text-2xl font-bold text-indigo-600">HK${totalAmount.toFixed(0)}</p>
+                <p className="text-sm text-gray-500">Total Raised</p>
+              </div>
+              <div className="p-4 text-center">
+                <p className="text-2xl font-bold text-green-600">{donations.length}</p>
+                <p className="text-sm text-gray-500">Total Donations</p>
+              </div>
+              <div className="p-4 text-center">
+                <p className="text-2xl font-bold text-purple-600">
+                  {new Set(donations.filter(d => d.user_id && d.user_id !== '0000').map(d => d.user_id)).size}
+                </p>
+                <p className="text-sm text-gray-500">Supporters</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Donation History Card */}
           <div className="bg-white rounded-lg shadow-md border border-gray-200">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                 </svg>
-                <h2 className="text-xl font-semibold">Donation History for {child.name}</h2>
+                <h2 className="text-xl font-semibold">Donation History</h2>
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                All contributions supporting this child's education
+                All contributions supporting {child.name}'s education
               </p>
             </div>
             
@@ -159,52 +227,7 @@ const FanClub = () => {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                 </div>
               ) : donations.length > 0 ? (
-                <div className="space-y-4">
-                  {/* Summary Stats */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">Total Raised</p>
-                          <p className="text-2xl font-bold text-indigo-600">
-                            HK${totalAmount.toFixed(2)}
-                          </p>
-                        </div>
-                        <svg className="h-8 w-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">Total Donations</p>
-                          <p className="text-2xl font-bold text-green-600">{donations.length}</p>
-                        </div>
-                        <svg className="h-8 w-8 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600">Unique Donors</p>
-                          <p className="text-2xl font-bold text-purple-600">
-                            {new Set(donations.filter(d => d.user_id && d.user_id !== '0000').map(d => d.user_id)).size}
-                          </p>
-                        </div>
-                        <svg className="h-8 w-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Donations List */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">All Donations</h3>
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="space-y-3 max-h-[500px] overflow-y-auto">
                       {donations.map((donation) => (
                         <div
                           key={donation.id}
@@ -253,8 +276,6 @@ const FanClub = () => {
                           </div>
                         </div>
                       ))}
-                    </div>
-                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -266,10 +287,6 @@ const FanClub = () => {
                 </div>
               )}
             </div>
-          </div>
-          
-          <div className="flex items-center justify-center w-full mt-6">
-            <DonateButton/>
           </div>
         </div>
       </div>
